@@ -13,13 +13,33 @@ const string modelName = "granite4.1:3b";
 const string apiKey = "YOUR-API-KEY";
 const string apiUrl = "http://172.23.176.1:11434/v1";
 
-const string SourceName = "MyApplication";
+#region  OpenTelemetrySetup
+
+const string OpenTelemetrySourceName = "MyApplication";
+const string OpenTelemetryServiceName = "MyAgentService";
+const string OpenTelemetryEndpoint = "http://localhost:18889";
+
+var resourceBuilder = ResourceBuilder
+    .CreateDefault()
+    .AddService(OpenTelemetryServiceName);
 
 using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MyAgentService"))
-    .AddSource(SourceName)
-    .AddOtlpExporter(opt => opt.Endpoint = new Uri("http://localhost:18889"))
+    .SetResourceBuilder(resourceBuilder)
+    .AddSource(OpenTelemetrySourceName)
+    .AddOtlpExporter(opt => opt.Endpoint = new Uri(OpenTelemetryEndpoint))
     .Build();
+
+using var meterProvider = Sdk.CreateMeterProviderBuilder()
+    .SetResourceBuilder(resourceBuilder)
+    .AddMeter(OpenTelemetrySourceName)
+    .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
+    {
+        exporterOptions.Endpoint = new Uri(OpenTelemetryEndpoint);
+        metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 5000; // 5s
+    })
+    .Build();
+
+#endregion
 
 IChatClient chatClient =
     new ChatClient(
@@ -31,7 +51,9 @@ IChatClient chatClient =
         })
     .AsIChatClient()
     .AsBuilder()
-    .UseOpenTelemetry(sourceName: SourceName, configure: c => c.EnableSensitiveData = true)
+    .UseOpenTelemetry(
+        sourceName: OpenTelemetrySourceName,
+        configure: c => c.EnableSensitiveData = true)
     .Build();
 
 AIAgent agent = new ChatClientAgent(

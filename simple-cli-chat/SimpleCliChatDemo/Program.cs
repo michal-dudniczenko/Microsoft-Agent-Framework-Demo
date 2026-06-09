@@ -6,7 +6,7 @@ using System.ClientModel;
 
 const string modelName = "granite4.1:3b";
 const string apiKey = "YOUR-API-KEY";
-const string apiUrl = "http://172.19.96.1:11434/v1";
+const string apiUrl = "http://172.23.176.1:11434/v1";
 
 IChatClient chatClient =
     new ChatClient(
@@ -18,7 +18,7 @@ IChatClient chatClient =
         })
     .AsIChatClient();
 
-AIAgent agent = chatClient.AsAIAgent();
+AIAgent agent = new ChatClientAgent(chatClient);
 
 Console.Write("\n=======================================================\n\n");
 

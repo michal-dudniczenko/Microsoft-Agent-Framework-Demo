@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.AI;
 using Microsoft.Agents.AI;
 using OpenAI;
 using OpenAI.Chat;
@@ -11,7 +11,7 @@ using LessSimpleCliChatDemo;
 
 const string modelName = "granite4.1:3b";
 const string apiKey = "YOUR-API-KEY";
-const string apiUrl = "http://172.19.96.1:11434/v1";
+const string apiUrl = "http://172.23.176.1:11434/v1";
 
 const string SourceName = "MyApplication";
 

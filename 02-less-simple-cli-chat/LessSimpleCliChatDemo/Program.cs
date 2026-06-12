@@ -11,10 +11,6 @@ using LessSimpleCliChatDemo;
 using System.Text.Json;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
-const string modelName = "granite4.1:3b";
-const string apiKey = "YOUR-API-KEY";
-const string apiUrl = "http://172.23.176.1:11434/v1";
-
 #region  OpenTelemetrySetup
 
 const string OpenTelemetrySourceName = "MyApplication";
@@ -42,6 +38,10 @@ using var meterProvider = Sdk.CreateMeterProviderBuilder()
     .Build();
 
 #endregion
+
+const string modelName = "granite4.1:3b";
+const string apiKey = "YOUR-API-KEY";
+const string apiUrl = "http://172.23.176.1:11434/v1";
 
 IChatClient chatClient =
     new ChatClient(

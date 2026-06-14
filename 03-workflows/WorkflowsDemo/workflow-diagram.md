@@ -1,6 +1,7 @@
 ```mermaid
 flowchart TD
   RequirementsProcessorExecutor["RequirementsProcessorExecutor (Start)"];
+  TripNotPossibleExecutor["TripNotPossibleExecutor"];
   AccomodationResearcherExecutor["AccomodationResearcherExecutor"];
   AttractionsResearcherExecutor["AttractionsResearcherExecutor"];
   RestaurantsResearcherExecutor["RestaurantsResearcherExecutor"];
@@ -14,6 +15,7 @@ flowchart TD
   AttractionsResearcherExecutor --> fan_in_CoordinatorExecutor_451E3E3B;
   RestaurantsResearcherExecutor --> fan_in_CoordinatorExecutor_451E3E3B;
   fan_in_CoordinatorExecutor_451E3E3B --> CoordinatorExecutor;
+  RequirementsProcessorExecutor --> TripNotPossibleExecutor;
   RequirementsProcessorExecutor --> AccomodationResearcherExecutor;
   RequirementsProcessorExecutor --> AttractionsResearcherExecutor;
   RequirementsProcessorExecutor --> RestaurantsResearcherExecutor;

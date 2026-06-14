@@ -1,6 +1,6 @@
-namespace WorkflowsDemo.Models;
+namespace WorkflowsDemo.Models.RestaurantsResearch;
 
-internal sealed record InitialUserTripRequirements(
+internal sealed record RestaurantsResearcherTripRequirements(
     string Country,
     string City,
     int TripBudgetUsd,
@@ -8,5 +8,5 @@ internal sealed record InitialUserTripRequirements(
     DateTime DepartureDateTime,
     int NumberOfAdults,
     int NumberOfChildren,
-    string AdditionalUserRequirementsInNaturalLanguage
+    string[] AdditionalRequirements
 );

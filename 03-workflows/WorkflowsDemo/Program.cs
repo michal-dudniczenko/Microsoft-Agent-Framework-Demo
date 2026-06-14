@@ -12,6 +12,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using WorkflowsDemo;
 using WorkflowsDemo.Agents;
+using WorkflowsDemo.Events;
 using WorkflowsDemo.Executors;
 using WorkflowsDemo.Models;
 using static WorkflowsDemo.Constants;
@@ -65,6 +66,7 @@ var coordinatorExecutor = new CoordinatorExecutor(coordinatorAgent);
 var reviewerExecutor = new ReviewerExecutor(reviewerAgent);
 
 var planGeneratorExecutor = new PlanGeneratorExecutor();
+var tripNotPossibleExecutor = new TripNotPossibleExecutor();
 
 // building workflow
 const string DemoWorkflowName = "DemoWorkflow";
@@ -72,6 +74,8 @@ const string DemoWorkflowName = "DemoWorkflow";
 var humanReviewPort = RequestPort.Create<CoordinatorResult, HumanReviewFeedback>("HumanReview");
 
 var workflow = new WorkflowBuilder(start: requirementsProcessorExecutor)
+    .AddEdge(requirementsProcessorExecutor, tripNotPossibleExecutor)
+    
     .AddFanOutEdge(
         requirementsProcessorExecutor,
         targets: [
@@ -106,7 +110,7 @@ var workflow = new WorkflowBuilder(start: requirementsProcessorExecutor)
     .AddEdge(reviewerExecutor, coordinatorExecutor)
     .AddEdge(humanReviewPort, coordinatorExecutor)
 
-    .WithOutputFrom(planGeneratorExecutor)
+    .WithOutputFrom(planGeneratorExecutor, tripNotPossibleExecutor)
     .WithName(DemoWorkflowName)
     .WithOpenTelemetry(
         activitySource: new ActivitySource(OpenTelemetrySourceName),

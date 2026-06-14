@@ -32,7 +32,7 @@ internal static class ChatClients
             credential: new ApiKeyCredential(openRouterApiKey),
             options: new OpenAIClientOptions
             {
-                Endpoint = new Uri(openRouterUrl)
+                Endpoint = new Uri(openRouterOpenApiUrl)
             })
             .AsIChatClient()
             .AsBuilder()

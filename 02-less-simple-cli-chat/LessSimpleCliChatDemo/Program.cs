@@ -13,9 +13,9 @@ using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 #region  OpenTelemetrySetup
 
-const string OpenTelemetrySourceName = "MyApplication";
-const string OpenTelemetryServiceName = "MyAgentService";
-const string OpenTelemetryEndpoint = "http://localhost:18889";
+const string OpenTelemetrySourceName = "Agents.Demo";
+const string OpenTelemetryServiceName = "AgentsDemo";
+const string OpenTelemetryEndpoint = "http://localhost:4317";
 
 var resourceBuilder = ResourceBuilder
     .CreateDefault()
@@ -39,9 +39,9 @@ using var meterProvider = Sdk.CreateMeterProviderBuilder()
 
 #endregion
 
-const string modelName = "granite4.1:3b";
-const string apiKey = "YOUR-API-KEY";
-const string apiUrl = "http://172.23.176.1:11434/v1";
+const string modelName = "MODEL-NAME";
+const string apiKey = "API-KEY";
+const string apiUrl = "API-URL";
 
 IChatClient chatClient =
     new ChatClient(
@@ -124,96 +124,180 @@ Console.Write("\n=======================================================\n\n");
 
 while (true)
 {
-    Console.Write("PROMPT:\t\t");
+    var prompt = ReadPrompt();
 
-    var prompt = string.Empty;
-    while (string.IsNullOrWhiteSpace(prompt))
+    if (prompt is null || IsCommand(prompt, "/exit"))
     {
-        prompt = Console.ReadLine();
-    }
-
-    prompt = prompt.Trim();
-
-    if (prompt.Equals("/clear", StringComparison.OrdinalIgnoreCase))
-    {
-        if (File.Exists(sessionFilePath))
-        {
-            try
-            {
-                File.Delete(sessionFilePath);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Could not delete session file: {ex.Message}");
-            }
-        }
-        session = await agent.CreateSessionAsync();
-        Console.WriteLine("Session cleared. New session created.");
-        Console.Write("\n=======================================================\n\n");
-        continue;
-    }
-
-    if (prompt.Equals("/exit", StringComparison.OrdinalIgnoreCase))
-    {
-        Console.WriteLine("Saving session and exiting...");
-        await SaveSessionAsync(agent, session, sessionFilePath);
+        await ExitAsync();
         return;
     }
 
-    Console.Write("RESPONSE:\t");
-
-    bool needsApproval = true;
-
-    // First call - use a string prompt
-    object currentInput = prompt;
-
-    while (needsApproval)
+    if (IsCommand(prompt, "/clear"))
     {
-        needsApproval = false;
-        var approvalRequests = new List<ToolApprovalRequestContent>();
-
-        // Stream the current run
-        IAsyncEnumerable<AgentResponseUpdate> stream = currentInput is string s
-            ? agent.RunStreamingAsync(s, session)
-            : agent.RunStreamingAsync((ChatMessage)currentInput, session);
-
-        await foreach (var update in stream)
-        {
-            Console.Write(update.Text);
-
-            // Collect any approval requests in this update
-            approvalRequests.AddRange(
-                update.Contents.OfType<ToolApprovalRequestContent>());
-        }
-
-        // After stream ends - handle any approval requests
-        if (approvalRequests.Count > 0)
-        {
-            needsApproval = true;
-
-            // For simplicity: handle one at a time
-            // In practice, batch all of them into a single ChatMessage
-            var request = approvalRequests[0];
-
-            var toolCall = (FunctionCallContent)request.ToolCall;
-
-            var argsDisplay = toolCall.Arguments?.Any() == true
-                ? $"({string.Join(", ", toolCall.Arguments)})"
-                : "";
-
-            Console.WriteLine($"\nApproval needed: '{toolCall.Name}{argsDisplay}");
-            Console.Write("Approve? (y/n): ");
-            bool approved = Console.ReadLine()?.Trim().ToLower() == "y";
-
-            var approvalMessage = new ChatMessage(
-                ChatRole.User,
-                [request.CreateResponse(approved)]);
-
-            currentInput = approvalMessage;
-        }
+        await ClearSessionAsync();
+        continue;
     }
 
+    await RunPromptAsync(prompt);
+
     Console.Write("\n\n=======================================================\n\n");
+}
+
+string? ReadPrompt()
+{
+    while (true)
+    {
+        Console.Write("PROMPT:\t\t");
+
+        var input = Console.ReadLine();
+
+        // Handles Ctrl+Z / redirected stdin ending.
+        if (input is null)
+        {
+            return null;
+        }
+
+        input = input.Trim();
+
+        if (!string.IsNullOrWhiteSpace(input))
+        {
+            return input;
+        }
+    }
+}
+
+static bool IsCommand(string prompt, string command)
+{
+    return prompt.Equals(command, StringComparison.OrdinalIgnoreCase);
+}
+
+async Task ExitAsync()
+{
+    Console.WriteLine("Saving session and exiting...");
+    await SaveSessionAsync(agent, session, sessionFilePath);
+}
+
+async Task ClearSessionAsync()
+{
+    try
+    {
+        if (File.Exists(sessionFilePath))
+        {
+            File.Delete(sessionFilePath);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Could not delete session file: {ex.Message}");
+    }
+
+    session = await agent.CreateSessionAsync();
+
+    Console.WriteLine("Session cleared. New session created.");
+    Console.Write("\n=======================================================\n\n");
+}
+
+async Task RunPromptAsync(string prompt)
+{
+    var approvalRequests = await StreamAndCollectApprovalsAsync(
+        agent.RunStreamingAsync(prompt, session));
+
+    while (approvalRequests.Count > 0)
+    {
+        var approvalResponses = CreateApprovalResponseMessages(approvalRequests);
+
+        approvalRequests = await StreamAndCollectApprovalsAsync(
+            agent.RunStreamingAsync(approvalResponses, session));
+    }
+}
+
+async Task<List<ToolApprovalRequestContent>> StreamAndCollectApprovalsAsync(
+    IAsyncEnumerable<AgentResponseUpdate> stream)
+{
+    var hasStartedResponse = false;
+    var approvalRequests = new List<ToolApprovalRequestContent>();
+
+    await foreach (var update in stream)
+    {
+        if (!string.IsNullOrEmpty(update.Text))
+        {
+            if (!hasStartedResponse)
+            {
+                Console.Write("RESPONSE:\t");
+                hasStartedResponse = true;
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+            }
+
+            Console.Write(update.Text);
+        }
+
+        approvalRequests.AddRange(
+            update.Contents.OfType<ToolApprovalRequestContent>());
+    }
+    Console.ResetColor();
+
+    return approvalRequests;
+}
+
+List<ChatMessage> CreateApprovalResponseMessages(
+    IEnumerable<ToolApprovalRequestContent> approvalRequests)
+{
+    var messages = new List<ChatMessage>();
+
+    foreach (var request in approvalRequests)
+    {
+        var approved = AskForApproval(request);
+
+        messages.Add(new ChatMessage(
+            ChatRole.User,
+            [request.CreateResponse(approved)]));
+    }
+
+    return messages;
+}
+
+bool AskForApproval(ToolApprovalRequestContent request)
+{
+    var toolCall = (FunctionCallContent)request.ToolCall;
+
+    Console.WriteLine();
+    Console.WriteLine($"Approval needed: '{toolCall.Name}{FormatArguments(toolCall)}'");
+
+    while (true)
+    {
+        Console.Write("Approve? (y/n): ");
+
+        var input = Console.ReadLine()?.Trim();
+
+        Console.WriteLine();
+
+        if (input?.Equals("y", StringComparison.OrdinalIgnoreCase) == true ||
+            input?.Equals("yes", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return true;
+        }
+
+        if (input is null ||
+            input.Equals("n", StringComparison.OrdinalIgnoreCase) ||
+            input.Equals("no", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        Console.WriteLine("Please enter 'y' or 'n'.");
+    }
+}
+
+static string FormatArguments(FunctionCallContent toolCall)
+{
+    if (toolCall.Arguments is null || !toolCall.Arguments.Any())
+    {
+        return string.Empty;
+    }
+
+    var args = toolCall.Arguments.Select(arg => $"{arg.Key}: {arg.Value}");
+
+    return $"({string.Join(", ", args)})";
 }
 
 static async Task SaveSessionAsync(AIAgent agent, AgentSession session, string filePath)
@@ -229,4 +313,3 @@ static async Task SaveSessionAsync(AIAgent agent, AgentSession session, string f
         Console.Error.WriteLine($"Error serializing session: {ex.Message}");
     }
 }
-

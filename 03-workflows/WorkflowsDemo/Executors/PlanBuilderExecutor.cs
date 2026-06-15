@@ -1,0 +1,301 @@
+using System.Text.Json;
+using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.Workflows;
+using WorkflowsDemo.Events;
+using WorkflowsDemo.MockData;
+using WorkflowsDemo.Models;
+using WorkflowsDemo.Models.AccommodationResearch;
+using WorkflowsDemo.Models.AttractionsResearch;
+using WorkflowsDemo.Models.PlanBuilder;
+using WorkflowsDemo.Models.PlanReviewer;
+using WorkflowsDemo.Models.RestaurantsResearch;
+using static WorkflowsDemo.Constants;
+
+namespace WorkflowsDemo.Executors;
+
+internal sealed partial class PlanBuilderExecutor(AIAgent agent)
+    : Executor(nameof(PlanBuilderExecutor))
+{
+    private int researchersCompletedCount = 0;
+
+    protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder protocolBuilder)
+    {
+        protocolBuilder.SendsMessage<PlanBuilderResult>();
+        protocolBuilder.YieldsOutput<WorkflowCompletedSignal>();
+        protocolBuilder.ConfigureRoutes(routeBuilder =>
+        {
+            routeBuilder.AddHandler<ResearchCompletedSignal>(HandleResearchCompletedAsync);
+            routeBuilder.AddHandler<PlanReviewerFeedback, PlanBuilderResult>(HandlePlanReviewerFeedbackAsync);
+            routeBuilder.AddHandler<HumanReviewFeedback>(HandleHumanFeedbackAsync);
+        });
+
+        return protocolBuilder;
+    }
+
+    private async ValueTask HandleResearchCompletedAsync(
+        ResearchCompletedSignal _,
+        IWorkflowContext context,
+        CancellationToken cancellationToken = default)
+    {
+        researchersCompletedCount++;
+        if (researchersCompletedCount < TotalResearchersCount)
+        {
+            return;
+        }
+
+        Console.WriteLine("PlanBuilderExecutor runs, all researches completed, generating plan");
+
+        var userRequirements = await context.ReadStateAsync<InitialUserTripRequirements>(
+            key: InitialTripRequirementsStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("User requirements are missing from state.");
+
+        var accommodationOptions = await context.ReadStateAsync<List<AccommodationOption>>(
+            key: AccommodationOptionsStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("Accommodation options are missing from state.");
+
+        if (accommodationOptions.Count == 0)
+            throw new InvalidOperationException("Empty list of accommodation options.");
+
+        var attractionsOptions = await context.ReadStateAsync<List<AttractionOption>>(
+            key: AttractionsOptionsStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("Attractions options are missing from state.");
+
+        if (attractionsOptions.Count == 0)
+            throw new InvalidOperationException("Empty list of attractions options.");
+
+        var restaurantOptions = await context.ReadStateAsync<List<RestaurantOption>>(
+            key: RestaurantsOptionsStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("Restaurant options are missing from state.");
+
+        if (restaurantOptions.Count == 0)
+            throw new InvalidOperationException("Empty list of restaurants options.");
+
+        var prompt = JsonSerializer.Serialize(
+            new PlanBuilderPrompt(
+                Requirements: userRequirements,
+                AccommodationOption: accommodationOptions,
+                AttractionOptions: attractionsOptions,
+                RestaurantOptions: restaurantOptions
+            ), JsonSerializerPrettyPrint);
+
+        var generatedPlan = (await agent.RunAsync<TripPlan>(
+            prompt, 
+            cancellationToken: cancellationToken)).Result;
+
+        // save plan in shared state
+        await context.QueueStateUpdateAsync(
+            key: CurrentTripPlanStateKeyName,
+            value: generatedPlan,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        // initialize review round numbers
+        await context.QueueStateUpdateAsync(
+            key: PlanReviewerRoundNumberStateKeyName,
+            value: 1,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        await context.QueueStateUpdateAsync(
+            key: HumanReviewRoundNumberStateKeyName,
+            value: 1,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        await context.SendMessageAsync(new PlanBuilderResult(
+            FinalPlanReady: false,
+            PlanReadyForHumanReview: false,
+            TripPlan: generatedPlan), cancellationToken);
+    }
+
+    private async ValueTask<PlanBuilderResult> HandlePlanReviewerFeedbackAsync(
+        PlanReviewerFeedback feedback,
+        IWorkflowContext context,
+        CancellationToken cancellationToken = default)
+    {
+        var tripPlan = await context.ReadStateAsync<TripPlan>(
+            key: CurrentTripPlanStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("Trip plan instance is missing from shared state.");
+
+        var currentAgentReviewRound = await context.ReadStateAsync<int>(
+            key: PlanReviewerRoundNumberStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken);
+
+        if (currentAgentReviewRound == default)
+            throw new InvalidOperationException("Agent review round number is missing from shared state");
+
+        var currentHumanReviewRound = await context.ReadStateAsync<int>(
+            key: HumanReviewRoundNumberStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken);
+
+        if (currentHumanReviewRound == default)
+            throw new InvalidOperationException("Human review round number is missing from shared state");
+
+        Console.WriteLine("PlanBuilderExecutor runs, received PlanReviewerFeedback\n\t"
+            + $"agent review round {currentAgentReviewRound}/{MaxAgentReviewRounds}\n\t"
+            + $"human review round {currentHumanReviewRound - 1}/{MaxHumanReviewRounds}");
+
+        if (feedback.ChangesSuggested)
+        {
+            Console.WriteLine("Reviewer suggested changes, iterating on plan");
+
+            tripPlan = (await agent.RunAsync<TripPlan>(
+                GetReviewerFeedbackPrompt(feedback.Details),
+                cancellationToken: cancellationToken)).Result;
+
+            // save updated plan in shared state
+            await context.QueueStateUpdateAsync(
+                key: CurrentTripPlanStateKeyName,
+                value: tripPlan,
+                scopeName: SharedStateScopeName,
+                cancellationToken: cancellationToken
+            );
+
+            if (currentAgentReviewRound < MaxAgentReviewRounds)
+            {
+                Console.WriteLine("Sending updated plan for another review round");
+
+                // increase agent review round number
+                await context.QueueStateUpdateAsync(
+                    key: PlanReviewerRoundNumberStateKeyName,
+                    value: currentAgentReviewRound + 1,
+                    scopeName: SharedStateScopeName,
+                    cancellationToken: cancellationToken
+                );
+
+                return new PlanBuilderResult(
+                    FinalPlanReady: false,
+                    PlanReadyForHumanReview: false,
+                    TripPlan: tripPlan);
+            }
+        }
+
+        // reset round number
+        await context.QueueStateUpdateAsync(
+            key: PlanReviewerRoundNumberStateKeyName,
+            value: 1,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        // decide whether to send for human review or produce final plan
+
+        if (currentHumanReviewRound <= MaxHumanReviewRounds)
+        {
+            Console.WriteLine("Sending plan for human review");
+
+            return new PlanBuilderResult(
+                FinalPlanReady: false,
+                PlanReadyForHumanReview: true,
+                TripPlan: tripPlan);
+        }
+
+        Console.WriteLine("Reached maximum number of human review rounds, sending plan to plan renderer");
+
+        return new PlanBuilderResult(
+            FinalPlanReady: true,
+            PlanReadyForHumanReview: false,
+            TripPlan: tripPlan);
+    }
+
+    private async ValueTask HandleHumanFeedbackAsync(
+        HumanReviewFeedback feedback,
+        IWorkflowContext context,
+        CancellationToken cancellationToken = default)
+    {
+        if (!feedback.IsPlanApproved && string.IsNullOrWhiteSpace(feedback.Details))
+            throw new InvalidOperationException("Received invalid value from human feedback");
+
+        var tripPlan = await context.ReadStateAsync<TripPlan>(
+            key: CurrentTripPlanStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        ) ?? throw new InvalidOperationException("Trip plan instance is missing from shared state.");
+
+        var currentHumanReviewRound = await context.ReadStateAsync<int>(
+            key: HumanReviewRoundNumberStateKeyName,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken);
+
+        if (currentHumanReviewRound == default)
+            throw new InvalidOperationException("Human review round number is missing from shared state");
+
+        if (feedback.IsPlanApproved)
+        {
+            Console.WriteLine("Human approved plan");
+
+            await context.YieldOutputAsync(new WorkflowCompletedSignal(), cancellationToken);
+            return;
+        }
+
+        Console.WriteLine("Received feedback from human reviewer, iterating on plan...");
+
+        tripPlan = (await agent.RunAsync<TripPlan>(
+            GetHumanFeedbackPrompt(feedback.Details),
+            cancellationToken: cancellationToken)).Result;
+
+        // save updated plan in shared state
+        await context.QueueStateUpdateAsync(
+            key: CurrentTripPlanStateKeyName,
+            value: tripPlan,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        // increase human review round number
+        await context.QueueStateUpdateAsync(
+            key: HumanReviewRoundNumberStateKeyName,
+            value: currentHumanReviewRound + 1,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken
+        );
+
+        Console.WriteLine("Sending updated plan to agent reviewer");
+        await context.SendMessageAsync(
+            new PlanBuilderResult(
+                FinalPlanReady: false,
+                PlanReadyForHumanReview: false,
+                TripPlan: tripPlan), 
+            cancellationToken);
+    }
+
+    private static string GetReviewerFeedbackPrompt(string feedback) => $"""
+        The Reviewer Agent has evaluated your previously generated trip plan and suggested the following corrections:
+
+        ${feedback}
+
+        Regenerate the trip plan, strictly observing these execution rules during your revision:
+
+        1. Fix the issues noted above by re-evaluating the original candidate data arrays (Accommodations, Attractions, Restaurants). Do not invent or enrich any data.
+        2. Maintain absolute compliance with all original rules: strict trip boundaries, chronological sorting, standard meal windows, and age/reservation warnings.
+        3. Your output must be exactly one valid JSON object matching the required PascalCase schema. Do not include markdown formatting, code fences (such as ```json), or any conversational text before or after the JSON.
+    """;
+
+    private static string GetHumanFeedbackPrompt(string feedback) => $"""
+        The human reviewer has evaluated your previously generated trip plan and issued the following mandatory corrections:
+
+        ${feedback}
+
+        Regenerate the trip plan, strictly observing these execution rules during your revision:
+
+        1. Fix the issues noted above by re-evaluating the original candidate data arrays (Accommodations, Attractions, Restaurants). Do not invent or enrich any data.
+        2. Maintain absolute compliance with all original rules: strict trip boundaries, chronological sorting, standard meal windows, and age/reservation warnings.
+        3. Your output must be exactly one valid JSON object matching the required PascalCase schema. Do not include markdown formatting, code fences (such as ```json), or any conversational text before or after the JSON.
+        4. If the suggested fix is impossible to apply, add a note and explanation to the `OverallExplanation` field content.
+    """;
+}

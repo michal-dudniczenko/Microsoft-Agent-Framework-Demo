@@ -8,8 +8,8 @@ internal static class Attractions
     public static IReadOnlyList<Attraction> Data { get; } =
     [
         new Attraction(
-            Id: "rome-attraction-001",
-            Name: "Pantheon",
+            AttractionId: "rome-attraction-001",
+            AttractionName: "Pantheon",
             Category: "Historical",
             Description: "Ancient Roman temple turned church, famous for its massive dome, central oculus, marble interior, and remarkably preserved classical architecture.",
             Tags: ["indoor", "historical", "architecture", "family-friendly", "wheelchair-accessible", "iconic"],
@@ -36,8 +36,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-002",
-            Name: "Trevi Fountain",
+            AttractionId: "rome-attraction-002",
+            AttractionName: "Trevi Fountain",
             Category: "Historical",
             Description: "Rome's most famous Baroque fountain, known for its theatrical sculptures, turquoise water, and the tradition of tossing a coin for a return to Rome.",
             Tags: ["outdoor", "romantic", "free", "photogenic", "iconic", "crowded"],
@@ -64,8 +64,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-003",
-            Name: "Piazza Navona",
+            AttractionId: "rome-attraction-003",
+            AttractionName: "Piazza Navona",
             Category: "Historical",
             Description: "Elegant public square built over an ancient stadium, lined with cafés, artists, churches, and Bernini's famous Fountain of the Four Rivers.",
             Tags: ["outdoor", "free", "romantic", "food-nearby", "architecture", "family-friendly"],
@@ -92,8 +92,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-004",
-            Name: "Santa Maria in Trastevere",
+            AttractionId: "rome-attraction-004",
+            AttractionName: "Santa Maria in Trastevere",
             Category: "Religious",
             Description: "One of Rome's oldest churches, admired for its golden mosaics, peaceful nave, and atmospheric location in the heart of Trastevere.",
             Tags: ["indoor", "historical", "religious", "free", "architecture", "quiet"],
@@ -120,8 +120,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-005",
-            Name: "Janiculum Hill",
+            AttractionId: "rome-attraction-005",
+            AttractionName: "Janiculum Hill",
             Category: "Viewpoint",
             Description: "Scenic hill above Trastevere offering sweeping views across Rome, leafy paths, monuments, and one of the city's best sunset spots.",
             Tags: ["outdoor", "free", "romantic", "panoramic-view", "walking", "sunset"],
@@ -148,8 +148,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-006",
-            Name: "Tiber Island",
+            AttractionId: "rome-attraction-006",
+            AttractionName: "Tiber Island",
             Category: "Historical",
             Description: "Small island in the Tiber River connected by ancient bridges, known for its legends, river views, summer events, and relaxed walking routes.",
             Tags: ["outdoor", "free", "historical", "walking", "riverfront", "family-friendly"],
@@ -176,8 +176,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-007",
-            Name: "Colosseum",
+            AttractionId: "rome-attraction-007",
+            AttractionName: "Colosseum",
             Category: "Historical",
             Description: "The iconic ancient amphitheater of Rome, once used for gladiator contests and public spectacles, now one of the world's most visited monuments.",
             Tags: ["outdoor", "historical", "iconic", "guided-tours", "family-friendly", "photogenic"],
@@ -204,8 +204,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-008",
-            Name: "Roman Forum",
+            AttractionId: "rome-attraction-008",
+            AttractionName: "Roman Forum",
             Category: "Historical",
             Description: "Ancient civic heart of Rome, filled with temples, basilicas, triumphal arches, and ruins that reveal the political and social life of the empire.",
             Tags: ["outdoor", "historical", "archaeology", "walking", "guided-tours", "sun-exposed"],
@@ -232,8 +232,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-009",
-            Name: "Palatine Hill",
+            AttractionId: "rome-attraction-009",
+            AttractionName: "Palatine Hill",
             Category: "Historical",
             Description: "Legendary hill associated with Rome's founding, featuring imperial palace ruins, gardens, archaeological remains, and excellent views over the Forum.",
             Tags: ["outdoor", "historical", "archaeology", "panoramic-view", "walking", "quiet"],
@@ -260,8 +260,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-010",
-            Name: "Basilica di Santa Maria Maggiore",
+            AttractionId: "rome-attraction-010",
+            AttractionName: "Basilica di Santa Maria Maggiore",
             Category: "Religious",
             Description: "Major papal basilica known for its ornate chapels, glittering mosaics, coffered ceiling, and grand blend of early Christian and Baroque design.",
             Tags: ["indoor", "religious", "historical", "architecture", "free", "wheelchair-accessible"],
@@ -288,8 +288,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-011",
-            Name: "Termini Station",
+            AttractionId: "rome-attraction-011",
+            AttractionName: "Termini Station",
             Category: "Transport Hub",
             Description: "Rome's main railway station and transit hub, useful for regional trains, airport connections, metro access, shopping, and quick food options.",
             Tags: ["indoor", "transport", "shopping", "food-nearby", "wheelchair-accessible", "practical"],
@@ -316,8 +316,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-012",
-            Name: "Vatican Museums",
+            AttractionId: "rome-attraction-012",
+            AttractionName: "Vatican Museums",
             Category: "Museum",
             Description: "Vast museum complex containing papal collections, classical sculptures, Renaissance masterpieces, the Raphael Rooms, and the Sistine Chapel.",
             Tags: ["indoor", "museum", "art", "historical", "guided-tours", "wheelchair-accessible"],
@@ -343,8 +343,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-013",
-            Name: "St. Peter's Basilica",
+            AttractionId: "rome-attraction-013",
+            AttractionName: "St. Peter's Basilica",
             Category: "Religious",
             Description: "Monumental Renaissance basilica in Vatican City, celebrated for Michelangelo's Pietà, Bernini's baldachin, immense nave, and dome views.",
             Tags: ["indoor", "religious", "historical", "architecture", "free", "iconic"],
@@ -371,8 +371,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-014",
-            Name: "Castel Sant'Angelo",
+            AttractionId: "rome-attraction-014",
+            AttractionName: "Castel Sant'Angelo",
             Category: "Museum",
             Description: "Cylindrical fortress and former papal refuge overlooking the Tiber, with historic rooms, military exhibits, ramparts, and rooftop city views.",
             Tags: ["indoor", "outdoor", "historical", "museum", "panoramic-view", "family-friendly"],
@@ -398,8 +398,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-015",
-            Name: "Orange Garden",
+            AttractionId: "rome-attraction-015",
+            AttractionName: "Orange Garden",
             Category: "Park",
             Description: "Peaceful hilltop garden on the Aventine, known for orange trees, shaded paths, romantic atmosphere, and a beautiful terrace view over Rome.",
             Tags: ["outdoor", "park", "free", "romantic", "panoramic-view", "quiet"],
@@ -426,8 +426,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-016",
-            Name: "Circus Maximus",
+            AttractionId: "rome-attraction-016",
+            AttractionName: "Circus Maximus",
             Category: "Historical",
             Description: "Expansive ancient chariot-racing arena between the Aventine and Palatine hills, now a broad open archaeological park and event space.",
             Tags: ["outdoor", "historical", "free", "walking", "family-friendly", "archaeology"],
@@ -454,8 +454,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-017",
-            Name: "Bocca della Verità",
+            AttractionId: "rome-attraction-017",
+            AttractionName: "Bocca della Verità",
             Category: "Historical",
             Description: "Famous ancient marble mask at the portico of Santa Maria in Cosmedin, surrounded by legends about truth-telling and a classic Roman photo stop.",
             Tags: ["outdoor", "historical", "photogenic", "family-friendly", "legendary", "quick-stop"],
@@ -482,8 +482,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-018",
-            Name: "National Roman Museum",
+            AttractionId: "rome-attraction-018",
+            AttractionName: "National Roman Museum",
             Category: "Museum",
             Description: "Major archaeological museum collection spread across historic sites, featuring Roman sculptures, frescoes, mosaics, coins, and everyday ancient artifacts.",
             Tags: ["indoor", "museum", "archaeology", "historical", "rainy-day", "educational"],
@@ -509,8 +509,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-019",
-            Name: "Baths of Diocletian",
+            AttractionId: "rome-attraction-019",
+            AttractionName: "Baths of Diocletian",
             Category: "Museum",
             Description: "Impressive remains of ancient imperial baths, now part of the National Roman Museum, with cloisters, inscriptions, sculpture, and archaeological galleries.",
             Tags: ["indoor", "outdoor", "museum", "archaeology", "historical", "quiet"],
@@ -536,8 +536,8 @@ internal static class Attractions
         ),
 
         new Attraction(
-            Id: "rome-attraction-020",
-            Name: "Spanish Steps",
+            AttractionId: "rome-attraction-020",
+            AttractionName: "Spanish Steps",
             Category: "Historical",
             Description: "Elegant monumental staircase connecting Piazza di Spagna with Trinità dei Monti, popular for people-watching, photography, and nearby luxury shopping.",
             Tags: ["outdoor", "free", "romantic", "photogenic", "shopping-nearby", "iconic"],

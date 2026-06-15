@@ -1,4 +1,4 @@
-namespace WorkflowsDemo.Models.AccomodationResearch;
+namespace WorkflowsDemo.Models.AccommodationResearch;
 
 internal sealed record AccommodationOption(
     string Name,

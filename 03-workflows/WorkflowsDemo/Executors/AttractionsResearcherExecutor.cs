@@ -49,12 +49,21 @@ internal sealed partial class AttractionsResearcherExecutor(AIAgent agent)
             prompt,
             cancellationToken: cancellationToken)).Result;
 
+        var attractionOptionsById = allAttractionsOptions.ToDictionary(
+            a => a.AttractionId,
+            StringComparer.OrdinalIgnoreCase);
+
         var bestOptions = result.Select(o =>
         {
-            var fullItem = allAttractionsOptions.First(a => a.Id.Equals(o.AttractionId, StringComparison.OrdinalIgnoreCase));
+            if (!attractionOptionsById.TryGetValue(o.AttractionId, out var fullItem))
+            {
+                throw new InvalidOperationException(
+                    $"Ranked attraction id '{o.AttractionId}' was not found in the source options. " +
+                    $"Valid attraction option count: {attractionOptionsById.Count}.");
+            }
 
             return new AttractionOption(
-                Name: fullItem.Name,
+                Name: fullItem.AttractionName,
                 Category: fullItem.Category,
 
                 TotalPriceAllTripMembersUsd: fullItem.TotalPriceAllTripMembersUsd,

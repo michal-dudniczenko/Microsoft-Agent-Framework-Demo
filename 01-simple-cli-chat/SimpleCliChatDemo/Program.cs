@@ -4,9 +4,9 @@ using OpenAI;
 using OpenAI.Chat;
 using System.ClientModel;
 
-const string modelName = "granite4.1:3b";
-const string apiKey = "YOUR-API-KEY";
-const string apiUrl = "http://172.23.176.1:11434/v1";
+const string modelName = "MODEL-NAME";
+const string apiKey = "API-KEY";
+const string apiUrl = "API-URL";
 
 IChatClient chatClient =
     new ChatClient(

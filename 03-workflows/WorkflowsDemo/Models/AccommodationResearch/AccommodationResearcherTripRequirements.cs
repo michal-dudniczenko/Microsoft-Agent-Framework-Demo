@@ -1,6 +1,6 @@
-namespace WorkflowsDemo.Models.RestaurantsResearch;
+namespace WorkflowsDemo.Models.AccommodationResearch;
 
-internal sealed record RestaurantsResearcherTripRequirements(
+internal sealed record AccommodationResearcherTripRequirements(
     string Country,
     string City,
     int TripBudgetUsd,

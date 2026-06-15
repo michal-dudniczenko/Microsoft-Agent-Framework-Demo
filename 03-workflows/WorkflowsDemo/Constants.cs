@@ -6,16 +6,17 @@ internal static class Constants
 {
     public static JsonSerializerOptions JsonSerializerPrettyPrint { get; } = new() { WriteIndented = true };
 
-    public const string OpenTelemetrySourceName = "Workflow.Demo";
-    public const string OpenTelemetryServiceName = "WorkflowDemo";
-    public const string OpenTelemetryEndpoint = "<OTEL-ENDPOINT>";
+    public const string OpenTelemetrySourceName = "Workflows.Demo";
+    public const string OpenTelemetryServiceName = "WorkflowsDemo";
+    public const string OpenTelemetryEndpoint = "http://localhost:4317";
 
-    public const string ollamaModelName = "<OLLAMA-MODEL-NAME>";
-    public const string ollamaUrl = "<OLLAMA-URL>";
+    public const string OllamaModelName = "<OLLAMA-MODEL-NAME>";
+    public const string OllamaUrl = "<OLLAMA-URL>";
 
-    public const string openRouterModelName = "<OPEN-ROUTER-MODEL-NAME>";
-    public const string openRouterApiKey = "<OPEN-ROUTER-API-KEY>";
-    public const string openRouterOpenApiUrl = "https://openrouter.ai/api/v1";
+    public const string OpenRouterModelName = "<OPEN-ROUTER-MODEL-NAME>";
+    public const string OpenRouterApiKeyEnvVarName = "OPEN_ROUTER_API_KEY";
+    public const string OpenRouterApiKey = "<OPEN-ROUTER-API-KEY>";
+    public const string OpenRouterOpenAIUrl = "https://openrouter.ai/api/v1";
 
     public const int TotalResearchersCount = 3;
 
@@ -24,12 +25,13 @@ internal static class Constants
 
     public const string SharedStateScopeName = "SharedScope";
 
-    public const string AgentReviewerRoundNumberStateKeyName = "AgentReviewerRoundNumber";
+    public const string PlanReviewerRoundNumberStateKeyName = "PlanReviewerRoundNumber";
     public const string HumanReviewRoundNumberStateKeyName = "HumanReviewRoundNumber";
+    public const string InitialTripRequirementsStateKeyName = "InitialRequirements";
     public const string ProcessedTripRequirementsStateKeyName = "ProcessedRequirements";
     public const string CurrentTripPlanStateKeyName = "CurrentTripPlan";
 
-    public const string AccomodationOptionsStateKeyName = "AccomodationOptions";
+    public const string AccommodationOptionsStateKeyName = "AccommodationOptions";
     public const string AttractionsOptionsStateKeyName = "AttractionsOptions";
     public const string RestaurantsOptionsStateKeyName = "RestaurantsOptions";
 }

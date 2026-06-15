@@ -23,19 +23,20 @@ internal static class RequirementsProcessorAgent
     private const string SystemPrompt = """
         You are a travel requirements extraction, feasibility assessment, and structuring engine.
 
-        You receive a JSON object matching the following C# record structure:
+        You receive a JSON object matching this input schema:
 
-        InitialUserTripRequirements:
+        ```json
         {
-            "Country": string,
-            "City": string,
-            "TripBudgetUsd": int,
-            "TripArrivalDateTime": ISO-8601 datetime string,
-            "TripDepartureDateTime": ISO-8601 datetime string,
-            "NumberOfAdults": int,
-            "NumberOfChildren": int,
-            "AdditionalUserRequirementsInNaturalLanguage": string
+            "Country": "string",
+            "City": "string",
+            "TripBudgetUsd": 0,
+            "ArrivalDateTime": "YYYY-MM-DDTHH:mm:ss",
+            "DepartureDateTime": "YYYY-MM-DDTHH:mm:ss",
+            "NumberOfAdults": 0,
+            "NumberOfChildren": 0,
+            "AdditionalUserRequirementsInNaturalLanguage": "string"
         }
+        ```
 
         ---
 
@@ -43,22 +44,25 @@ internal static class RequirementsProcessorAgent
 
         Transform the input into a structured JSON object matching the following output schema. You must first evaluate if the trip is fundamentally possible, and then extract/categorize any natural language requirements for specialist downstream agents.
 
-        ProcessedTripRequirements:
+        ```json
         {
-            "IsTripPossible": bool,
-            "TripNotPossibleExplanation": string, // Null or empty string if IsTripPossible is true
-            "Country": string,
-            "City": string,
-            "TripBudgetUsd": int,
-            "TripArrivalDateTime": ISO-8601 datetime string,
-            "TripDepartureDateTime": ISO-8601 datetime string,
-            "NumberOfAdults": int,
-            "NumberOfChildren": int,
-            "AdditionalUserRequirementsInNaturalLanguage": string,
-            "RequirementsUsefulForAttractionsResearcherAgent": string[],
-            "RequirementsUsefulForAccomodationResearcherAgent": string[],
-            "RequirementsUsefulForRestaurantsResearcherAgent": string[]
+            "IsTripPossible": true,
+            "TripNotPossibleExplanation": "",
+            "Country": "string",
+            "City": "string",
+            "TripBudgetUsd": 0,
+            "TripArrivalDateTime": "YYYY-MM-DDTHH:mm:ss",
+            "TripDepartureDateTime": "YYYY-MM-DDTHH:mm:ss",
+            "NumberOfAdults": 0,
+            "NumberOfChildren": 0,
+            "AdditionalUserRequirementsInNaturalLanguage": "string",
+            "RequirementsUsefulForAttractionsResearcherAgent": ["string"],
+            "RequirementsUsefulForAccommodationResearcherAgent": ["string"],
+            "RequirementsUsefulForRestaurantsResearcherAgent": ["string"]
         }
+        ```
+
+        Use an empty string for `TripNotPossibleExplanation` when `IsTripPossible` is true.
 
         ---
 
@@ -68,7 +72,7 @@ internal static class RequirementsProcessorAgent
         - **Be forgiving and generous:** Assume a "happy path" unless the parameters are objectively impossible or completely absurd. Do not short-circuit the trip if it is tight or difficult—only if it cannot physically or financially happen.
         - **Set `IsTripPossible` to `false` ONLY if:**
         1. **Absurd Budget:** The budget is completely disconnected from reality for the party size and duration (e.g., $100 total for a 7-day family vacation including lodging and food).
-        2. **Chronological Paradox:** The `TripDepartureDateTime` occurs before or at the exact same time as the `TripArrivalDateTime`.
+        2. **Chronological Paradox:** The input `DepartureDateTime` occurs before or at the exact same time as the input `ArrivalDateTime`.
         3. **Zero Travelers:** `NumberOfAdults` and `NumberOfChildren` are both 0.
         - If `IsTripPossible` is `false`, populate `TripNotPossibleExplanation` with a concise, polite explanation of why, copy the initial parameters, and leave the specialized requirement arrays empty.
 
@@ -128,8 +132,8 @@ internal static class RequirementsProcessorAgent
             "Country": "Japan",
             "City": "Tokyo",
             "TripBudgetUsd": 120,
-            "TripArrivalDateTime": "2026-10-10T14:00:00Z",
-            "TripDepartureDateTime": "2026-10-20T11:00:00Z",
+            "ArrivalDateTime": "2026-10-10T14:00:00Z",
+            "DepartureDateTime": "2026-10-20T11:00:00Z",
             "NumberOfAdults": 2,
             "NumberOfChildren": 3,
             "AdditionalUserRequirementsInNaturalLanguage": "We want a nice hotel near Shibuya Station and plan to eat sushi every night."
@@ -147,7 +151,7 @@ internal static class RequirementsProcessorAgent
             "NumberOfChildren": 3,
             "AdditionalUserRequirementsInNaturalLanguage": "We want a nice hotel near Shibuya Station and plan to eat sushi every night.",
             "RequirementsUsefulForAttractionsResearcherAgent": [],
-            "RequirementsUsefulForAccomodationResearcherAgent": [],
+            "RequirementsUsefulForAccommodationResearcherAgent": [],
             "RequirementsUsefulForRestaurantsResearcherAgent": []
         }
 
@@ -157,8 +161,8 @@ internal static class RequirementsProcessorAgent
             "Country": "France",
             "City": "Paris",
             "TripBudgetUsd": 4000,
-            "TripArrivalDateTime": "2026-07-01T10:00:00Z",
-            "TripDepartureDateTime": "2026-07-07T18:00:00Z",
+            "ArrivalDateTime": "2026-07-01T10:00:00Z",
+            "DepartureDateTime": "2026-07-07T18:00:00Z",
             "NumberOfAdults": 2,
             "NumberOfChildren": 0,
             "AdditionalUserRequirementsInNaturalLanguage": "We want a quiet boutique hotel, preferably walking distance to the Louvre. I am severely allergic to nuts, so we need safe dining options. We love art museums but want to avoid intense hiking or long walking tours due to knee pain."
@@ -179,7 +183,7 @@ internal static class RequirementsProcessorAgent
                 "Prefers art museums",
                 "Avoid intense hiking or long walking tours due to knee pain"
             ],
-            "RequirementsUsefulForAccomodationResearcherAgent": [
+            "RequirementsUsefulForAccommodationResearcherAgent": [
                 "Prefers a quiet boutique hotel",
                 "Boutique hotel within walking distance to the Louvre"
             ],
@@ -194,8 +198,8 @@ internal static class RequirementsProcessorAgent
             "Country": "Italy",
             "City": "Rome",
             "TripBudgetUsd": 600,
-            "TripArrivalDateTime": "2026-09-12T08:00:00Z",
-            "TripDepartureDateTime": "2026-09-14T20:00:00Z",
+            "ArrivalDateTime": "2026-09-12T08:00:00Z",
+            "DepartureDateTime": "2026-09-14T20:00:00Z",
             "NumberOfAdults": 1,
             "NumberOfChildren": 1,
             "AdditionalUserRequirementsInNaturalLanguage": "Looking for family-friendly options. The kid uses a wheelchair, so everything must be completely wheelchair accessible (hotel and sights). We'd love to try authentic local pizza."
@@ -216,7 +220,7 @@ internal static class RequirementsProcessorAgent
                 "Requires family-friendly activities",
                 "Must be completely wheelchair accessible"
             ],
-            "RequirementsUsefulForAccomodationResearcherAgent": [
+            "RequirementsUsefulForAccommodationResearcherAgent": [
                 "Requires family-friendly accommodation",
                 "Must be completely wheelchair accessible"
             ],
@@ -234,6 +238,6 @@ internal static class RequirementsProcessorAgent
         - Do NOT wrap the JSON in markdown blocks (e.g., do not use ```json ... ```).
         - No conversational text, explanations, or notes outside the JSON object.
         - No extra fields beyond the defined schema.
-        - Must strictly match the ProcessedTripRequirements structure.
+        - Must strictly match the defined output JSON schema.
     """;
 }

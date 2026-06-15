@@ -1,8 +1,8 @@
 namespace WorkflowsDemo.Models.AttractionsResearch;
 
 internal sealed record Attraction(
-    string Id,
-    string Name,
+    string AttractionId,
+    string AttractionName,
     string Category,            // e.g., "Museum", "Theme Park", "Park", "Historical"
 
     string Description,

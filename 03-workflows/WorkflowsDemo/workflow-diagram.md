@@ -1,27 +1,25 @@
 ```mermaid
 flowchart TD
   RequirementsProcessorExecutor["RequirementsProcessorExecutor (Start)"];
-  TripNotPossibleExecutor["TripNotPossibleExecutor"];
-  AccomodationResearcherExecutor["AccomodationResearcherExecutor"];
+  AccommodationResearcherExecutor["AccommodationResearcherExecutor"];
   AttractionsResearcherExecutor["AttractionsResearcherExecutor"];
   RestaurantsResearcherExecutor["RestaurantsResearcherExecutor"];
-  CoordinatorExecutor["CoordinatorExecutor"];
-  PlanGeneratorExecutor["PlanGeneratorExecutor"];
+  PlanBuilderExecutor["PlanBuilderExecutor"];
+  PlanReviewerExecutor["PlanReviewerExecutor"];
+  PlanRendererExecutor["PlanRendererExecutor"];
   HumanReview["HumanReview"];
-  ReviewerExecutor["ReviewerExecutor"];
 
-  fan_in_CoordinatorExecutor_451E3E3B((fan-in))
-  AccomodationResearcherExecutor --> fan_in_CoordinatorExecutor_451E3E3B;
-  AttractionsResearcherExecutor --> fan_in_CoordinatorExecutor_451E3E3B;
-  RestaurantsResearcherExecutor --> fan_in_CoordinatorExecutor_451E3E3B;
-  fan_in_CoordinatorExecutor_451E3E3B --> CoordinatorExecutor;
-  RequirementsProcessorExecutor --> TripNotPossibleExecutor;
-  RequirementsProcessorExecutor --> AccomodationResearcherExecutor;
+  fan_in_PlanBuilderExecutor_817D9128((fan-in))
+  AccommodationResearcherExecutor --> fan_in_PlanBuilderExecutor_817D9128;
+  AttractionsResearcherExecutor --> fan_in_PlanBuilderExecutor_817D9128;
+  RestaurantsResearcherExecutor --> fan_in_PlanBuilderExecutor_817D9128;
+  fan_in_PlanBuilderExecutor_817D9128 --> PlanBuilderExecutor;
+  RequirementsProcessorExecutor --> AccommodationResearcherExecutor;
   RequirementsProcessorExecutor --> AttractionsResearcherExecutor;
   RequirementsProcessorExecutor --> RestaurantsResearcherExecutor;
-  CoordinatorExecutor -. conditional .-> PlanGeneratorExecutor;
-  CoordinatorExecutor -. conditional .-> HumanReview;
-  CoordinatorExecutor -. conditional .-> ReviewerExecutor;
-  ReviewerExecutor --> CoordinatorExecutor;
-  HumanReview --> CoordinatorExecutor;
+  PlanBuilderExecutor -. conditional .-> PlanReviewerExecutor;
+  PlanBuilderExecutor -. conditional .-> PlanRendererExecutor;
+  PlanReviewerExecutor --> PlanBuilderExecutor;
+  PlanRendererExecutor --> HumanReview;
+  HumanReview --> PlanBuilderExecutor;
 ```

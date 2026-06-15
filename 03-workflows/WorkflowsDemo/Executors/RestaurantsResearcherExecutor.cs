@@ -29,8 +29,8 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
             Country: fullRequirements.Country,
             City: fullRequirements.City,
             TripBudgetUsd: fullRequirements.TripBudgetUsd,
-            ArrivalDateTime: fullRequirements.TripArrivalDateTime,
-            DepartureDateTime: fullRequirements.TripDepartureDateTime,
+            TripArrivalDateTime: fullRequirements.TripArrivalDateTime,
+            TripDepartureDateTime: fullRequirements.TripDepartureDateTime,
             NumberOfAdults: fullRequirements.NumberOfAdults,
             NumberOfChildren: fullRequirements.NumberOfChildren,
             AdditionalRequirements: fullRequirements.RequirementsUsefulForRestaurantsResearcherAgent
@@ -49,10 +49,20 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
             prompt,
             cancellationToken: cancellationToken)).Result;
 
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var restaurantOptionsById = allRestaurantsOptions.ToDictionary(
+            r => r.RestaurantId,
+            StringComparer.OrdinalIgnoreCase);
+
         var bestOptions = result.Select(o =>
         {
-            var fullItem = allRestaurantsOptions.First(
-                r => r.RestaurantId.Equals(o.RestaurantId, StringComparison.OrdinalIgnoreCase));
+            if (!restaurantOptionsById.TryGetValue(o.RestaurantId, out var fullItem))
+            {
+                throw new InvalidOperationException(
+                    $"Ranked restaurant id '{o.RestaurantId}' was not found in the source options. " +
+                    $"Valid restaurant option count: {restaurantOptionsById.Count}.");
+            }
 
             return new RestaurantOption(
                 fullItem.RestaurantName,

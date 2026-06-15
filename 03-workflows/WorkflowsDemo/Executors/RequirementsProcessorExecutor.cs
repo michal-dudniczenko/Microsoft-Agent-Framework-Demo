@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
 using WorkflowsDemo.Events;
+using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using static WorkflowsDemo.Constants;
 
@@ -12,17 +13,17 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
 {
     protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder protocolBuilder)
     {
+        protocolBuilder.SendsMessage<RequirementsProcessedSignal>();
+        protocolBuilder.YieldsOutput<WorkflowCompletedSignal>();
+
         protocolBuilder.ConfigureRoutes(routeBuilder =>
         {
             routeBuilder.AddHandler<InitialUserTripRequirements>(HandleAsync);
-            routeBuilder.AddHandler<string, TripNotPossibleEvent>(TemporaryWorkAround);
-            routeBuilder.AddHandler<int, RequirementsProcessedSignal>(TemporaryWorkAround2);
         });
 
         return protocolBuilder;
     }
 
-    [MessageHandler]
     private async ValueTask HandleAsync(
         InitialUserTripRequirements requirements,
         IWorkflowContext context,
@@ -31,6 +32,12 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
         Console.WriteLine("RequirementsProcessorExecutor runs, produces and saves in shared state structured " +
             "requirements for researchers");
 
+        await context.QueueStateUpdateAsync(
+            key: InitialTripRequirementsStateKeyName,
+            value: requirements,
+            scopeName: SharedStateScopeName,
+            cancellationToken: cancellationToken);
+
         var prompt = JsonSerializer.Serialize(requirements, JsonSerializerPrettyPrint);
 
         var result = (await agent.RunAsync<ProcessedTripRequirements>(prompt, cancellationToken: cancellationToken))
@@ -38,9 +45,10 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
 
         if (!result.IsTripPossible)
         {
-            await context.SendMessageAsync(new TripNotPossibleEvent(
-                result.TripNotPossibleExplanation),
-                cancellationToken);
+            Console.WriteLine("Unfortunately i am not able to come up with a plan that would satisfy your requirements."
+                + $"\nReason: {result.TripNotPossibleExplanation}");
+            
+            await context.YieldOutputAsync(new WorkflowCompletedSignal(), cancellationToken);
             return;
         }
 
@@ -51,21 +59,5 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
             cancellationToken: cancellationToken);
 
         await context.SendMessageAsync(new RequirementsProcessedSignal(), cancellationToken);
-    }
-
-    private static async ValueTask<TripNotPossibleEvent> TemporaryWorkAround(
-        string _,
-        IWorkflowContext context,
-        CancellationToken cancellationToken = default)
-    {
-        return new TripNotPossibleEvent("");
-    }
-
-    private static async ValueTask<RequirementsProcessedSignal> TemporaryWorkAround2(
-        int _,
-        IWorkflowContext context,
-        CancellationToken cancellationToken = default)
-    {
-        return new RequirementsProcessedSignal();
     }
 }

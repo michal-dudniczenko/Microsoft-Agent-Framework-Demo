@@ -12,6 +12,6 @@ internal sealed record ProcessedTripRequirements(
     int NumberOfChildren,
     string AdditionalUserRequirementsInNaturalLanguage,
     string[] RequirementsUsefulForAttractionsResearcherAgent,
-    string[] RequirementsUsefulForAccomodationResearcherAgent,
+    string[] RequirementsUsefulForAccommodationResearcherAgent,
     string[] RequirementsUsefulForRestaurantsResearcherAgent
 );

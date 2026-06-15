@@ -31,8 +31,8 @@ internal static class RestaurantsResearcherAgent
             "Country": "string",
             "City": "string",
             "TripBudgetUsd": 0,
-            "ArrivalDateTime": "string",
-            "DepartureDateTime": "string",
+            "TripArrivalDateTime": "string",
+            "TripDepartureDateTime": "string",
             "NumberOfAdults": 0,
             "NumberOfChildren": 0,
             "AdditionalRequirements": ["string"]
@@ -114,8 +114,8 @@ internal static class RestaurantsResearcherAgent
 
         Use:
 
-        * `ArrivalDateTime`
-        * `DepartureDateTime`
+        * `TripArrivalDateTime`
+        * `TripDepartureDateTime`
         * `OpeningHours`
 
         to determine whether the restaurant is realistically visitable during the trip.

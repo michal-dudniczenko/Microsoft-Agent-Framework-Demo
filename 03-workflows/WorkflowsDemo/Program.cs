@@ -12,9 +12,9 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using WorkflowsDemo;
 using WorkflowsDemo.Agents;
-using WorkflowsDemo.Events;
 using WorkflowsDemo.Executors;
 using WorkflowsDemo.Models;
+using WorkflowsDemo.Models.PlanBuilder;
 using static WorkflowsDemo.Constants;
 
 #region  OpenTelemetry Setup
@@ -49,73 +49,71 @@ var ollamaChatClient = ChatClients.GetOllamaChatClient();
 var requirementsProcessorAgent = RequirementsProcessorAgent.GetAgent(ollamaChatClient);
 
 var attractionsResearcherAgent = AttractionsResearcherAgent.GetAgent(ollamaChatClient);
-var accomodationResearcherAgent = AccomodationResearcherAgent.GetAgent(ollamaChatClient);
+var accommodationResearcherAgent = AccommodationResearcherAgent.GetAgent(ollamaChatClient);
 var restaurantsResearcherAgent = RestaurantsResearcherAgent.GetAgent(ollamaChatClient);
 
-var coordinatorAgent = CoordinatorAgent.GetAgent(ollamaChatClient); //TODO change to openrouter?
-var reviewerAgent = ReviewerAgent.GetAgent(ollamaChatClient);
+var planBuilderAgent = PlanBuilderAgent.GetAgent(openRouterChatClient);
+var planReviewerAgent = PlanReviewerAgent.GetAgent(ollamaChatClient);
 
 // executors
 var requirementsProcessorExecutor = new RequirementsProcessorExecutor(requirementsProcessorAgent);
 
-var accomodationResearcherExecutor = new AccomodationResearcherExecutor(accomodationResearcherAgent);
+var accommodationResearcherExecutor = new AccommodationResearcherExecutor(accommodationResearcherAgent);
 var attractionsResearcherExecutor = new AttractionsResearcherExecutor(attractionsResearcherAgent);
 var restaurantsResearcherExecutor = new RestaurantsResearcherExecutor(restaurantsResearcherAgent);
 
-var coordinatorExecutor = new CoordinatorExecutor(coordinatorAgent);
-var reviewerExecutor = new ReviewerExecutor(reviewerAgent);
+var planBuilderExecutor = new PlanBuilderExecutor(planBuilderAgent);
+var planReviewerExecutor = new PlanReviewerExecutor(planReviewerAgent);
 
-var planGeneratorExecutor = new PlanGeneratorExecutor();
-var tripNotPossibleExecutor = new TripNotPossibleExecutor();
+var planRendererExecutor = new PlanRendererExecutor();
 
 // building workflow
 const string DemoWorkflowName = "DemoWorkflow";
 
-var humanReviewPort = RequestPort.Create<CoordinatorResult, HumanReviewFeedback>("HumanReview");
+var humanReviewPort = RequestPort.Create<PlanBuilderResult, HumanReviewFeedback>("HumanReview");
 
 var workflow = new WorkflowBuilder(start: requirementsProcessorExecutor)
-    .AddEdge(requirementsProcessorExecutor, tripNotPossibleExecutor)
-    
+
     .AddFanOutEdge(
         requirementsProcessorExecutor,
         targets: [
-            accomodationResearcherExecutor,
+            accommodationResearcherExecutor,
             attractionsResearcherExecutor,
             restaurantsResearcherExecutor
         ])
     .AddFanInBarrierEdge(
         [
-            accomodationResearcherExecutor,
+            accommodationResearcherExecutor,
             attractionsResearcherExecutor,
             restaurantsResearcherExecutor
         ],
-        target: coordinatorExecutor
+        target: planBuilderExecutor
     )
 
-    .AddEdge<CoordinatorResult>(
-        coordinatorExecutor,
-        planGeneratorExecutor,
-        condition: result => result?.FinalPlanReady == true)
-
-    .AddEdge<CoordinatorResult>(
-        coordinatorExecutor,
-        humanReviewPort,
-        condition: result => result?.PlanReadyForHumanReview == true)
-
-    .AddEdge<CoordinatorResult>(
-        coordinatorExecutor,
-        reviewerExecutor,
+    .AddEdge<PlanBuilderResult>(
+        planBuilderExecutor,
+        planReviewerExecutor,
         condition: result => result?.PlanReadyForHumanReview == false && result?.FinalPlanReady == false)
+    .AddEdge(planReviewerExecutor, planBuilderExecutor)
 
-    .AddEdge(reviewerExecutor, coordinatorExecutor)
-    .AddEdge(humanReviewPort, coordinatorExecutor)
+    .AddEdge<PlanBuilderResult>(
+        planBuilderExecutor,
+        planRendererExecutor,
+        condition: result => result?.FinalPlanReady == true || result?.PlanReadyForHumanReview == true)
 
-    .WithOutputFrom(planGeneratorExecutor, tripNotPossibleExecutor)
+    .AddEdge(planRendererExecutor, humanReviewPort)
+
+    .AddEdge(humanReviewPort, planBuilderExecutor)
+
+    .WithOutputFrom(requirementsProcessorExecutor, planRendererExecutor, planBuilderExecutor)
     .WithName(DemoWorkflowName)
     .WithOpenTelemetry(
         activitySource: new ActivitySource(OpenTelemetrySourceName),
         configure: c => c.EnableSensitiveData = true)
     .Build();
+
+// export workflow as mermaid diagram
+File.WriteAllText("workflow-diagram.md", "```mermaid\n" + workflow.ToMermaidString() + "\n```\n");
 
 // ====================================================================================================================
 
@@ -161,9 +159,6 @@ await foreach (WorkflowEvent evt in run.WatchStreamAsync())
             break;
     }
 }
-
-// export workflow as mermaid diagram
-File.WriteAllText("workflow-diagram.md", "```mermaid\n" + workflow.ToMermaidString() + "\n```\n");
 
 #region DevUI Setup
 

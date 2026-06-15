@@ -1,8 +1,8 @@
-namespace WorkflowsDemo.Models.AccomodationResearch;
+namespace WorkflowsDemo.Models.AccommodationResearch;
 
 internal sealed record Accommodation(
-    string AccomodationId,
-    string AccomodationName,
+    string AccommodationId,
+    string AccommodationName,
     string Type,
 
     decimal TotalStayPriceAllTripMembersUsd,

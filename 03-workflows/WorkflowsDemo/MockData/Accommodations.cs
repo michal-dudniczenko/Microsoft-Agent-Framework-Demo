@@ -1,4 +1,4 @@
-using WorkflowsDemo.Models.AccomodationResearch;
+using WorkflowsDemo.Models.AccommodationResearch;
 
 namespace WorkflowsDemo.MockData;
 
@@ -7,8 +7,8 @@ internal static class Accommodations
     public static IReadOnlyList<Accommodation> Data { get; } =
     [
         new Accommodation(
-            AccomodationId: "rome-001",
-            AccomodationName: "Grand Roma Palace",
+            AccommodationId: "rome-001",
+            AccommodationName: "Grand Roma Palace",
             Type: "Luxury Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 350,
@@ -28,8 +28,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-002",
-            AccomodationName: "Trastevere Garden Suites",
+            AccommodationId: "rome-002",
+            AccommodationName: "Trastevere Garden Suites",
             Type: "Boutique Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 180,
@@ -49,8 +49,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-003",
-            AccomodationName: "Colosseum View Apartments",
+            AccommodationId: "rome-003",
+            AccommodationName: "Colosseum View Apartments",
             Type: "Apartment",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 160,
@@ -70,8 +70,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-004",
-            AccomodationName: "Roma Backpackers Hub",
+            AccommodationId: "rome-004",
+            AccommodationName: "Roma Backpackers Hub",
             Type: "Hostel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 40,
@@ -91,8 +91,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-005",
-            AccomodationName: "Vatican Residence Hotel",
+            AccommodationId: "rome-005",
+            AccommodationName: "Vatican Residence Hotel",
             Type: "Mid-Range Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 130,
@@ -112,8 +112,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-006",
-            AccomodationName: "Aventine Family Retreat",
+            AccommodationId: "rome-006",
+            AccommodationName: "Aventine Family Retreat",
             Type: "Family Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 220,
@@ -133,8 +133,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-007",
-            AccomodationName: "Termini Business Inn",
+            AccommodationId: "rome-007",
+            AccommodationName: "Termini Business Inn",
             Type: "Business Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 110,
@@ -154,8 +154,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-008",
-            AccomodationName: "Spanish Steps Boutique Stay",
+            AccommodationId: "rome-008",
+            AccommodationName: "Spanish Steps Boutique Stay",
             Type: "Boutique Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 240,
@@ -175,8 +175,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-009",
-            AccomodationName: "Testaccio Urban Loft",
+            AccommodationId: "rome-009",
+            AccommodationName: "Testaccio Urban Loft",
             Type: "Apartment",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 100,
@@ -196,8 +196,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-010",
-            AccomodationName: "Parioli Executive Suites",
+            AccommodationId: "rome-010",
+            AccommodationName: "Parioli Executive Suites",
             Type: "Luxury Apartment Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 260,
@@ -217,8 +217,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-011",
-            AccomodationName: "San Giovanni Comfort Hotel",
+            AccommodationId: "rome-011",
+            AccommodationName: "San Giovanni Comfort Hotel",
             Type: "Budget Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 90,
@@ -238,8 +238,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-012",
-            AccomodationName: "Borghese Park Grand Hotel",
+            AccommodationId: "rome-012",
+            AccommodationName: "Borghese Park Grand Hotel",
             Type: "Luxury Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 320,
@@ -259,8 +259,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-013",
-            AccomodationName: "Campo de Fiori Guesthouse",
+            AccommodationId: "rome-013",
+            AccommodationName: "Campo de Fiori Guesthouse",
             Type: "Guesthouse",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 120,
@@ -280,8 +280,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-014",
-            AccomodationName: "EUR Modern Residence",
+            AccommodationId: "rome-014",
+            AccommodationName: "EUR Modern Residence",
             Type: "Apartment Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 140,
@@ -301,8 +301,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-015",
-            AccomodationName: "Monti Artisan Hotel",
+            AccommodationId: "rome-015",
+            AccommodationName: "Monti Artisan Hotel",
             Type: "Boutique Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 190,
@@ -322,8 +322,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-016",
-            AccomodationName: "Navona Heritage Suites",
+            AccommodationId: "rome-016",
+            AccommodationName: "Navona Heritage Suites",
             Type: "Boutique Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 210,
@@ -343,8 +343,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-017",
-            AccomodationName: "Ostiense Creative Loft",
+            AccommodationId: "rome-017",
+            AccommodationName: "Ostiense Creative Loft",
             Type: "Apartment",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 95,
@@ -364,8 +364,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-018",
-            AccomodationName: "Villa Pamphili Resort",
+            AccommodationId: "rome-018",
+            AccommodationName: "Villa Pamphili Resort",
             Type: "Resort Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 280,
@@ -385,8 +385,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-019",
-            AccomodationName: "Trevi Corner Inn",
+            AccommodationId: "rome-019",
+            AccommodationName: "Trevi Corner Inn",
             Type: "Guesthouse",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 125,
@@ -406,8 +406,8 @@ internal static class Accommodations
         ),
 
         new Accommodation(
-            AccomodationId: "rome-020",
-            AccomodationName: "Flaminio Design Hotel",
+            AccommodationId: "rome-020",
+            AccommodationName: "Flaminio Design Hotel",
             Type: "Design Hotel",
             TotalStayPriceAllTripMembersUsd: 0,
             NightlyPriceUsd: 170,

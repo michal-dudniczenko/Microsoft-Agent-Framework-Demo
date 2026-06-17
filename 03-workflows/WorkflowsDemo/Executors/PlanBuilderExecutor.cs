@@ -1,15 +1,14 @@
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using System.Text.Json;
 using WorkflowsDemo.Events;
-using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.AccommodationResearch;
 using WorkflowsDemo.Models.AttractionsResearch;
 using WorkflowsDemo.Models.PlanBuilder;
 using WorkflowsDemo.Models.PlanReviewer;
 using WorkflowsDemo.Models.RestaurantsResearch;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
@@ -83,11 +82,10 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
                 Requirements: userRequirements,
                 AccommodationOption: accommodationOptions,
                 AttractionOptions: attractionsOptions,
-                RestaurantOptions: restaurantOptions
-            ), JsonSerializerPrettyPrint);
+                RestaurantOptions: restaurantOptions));
 
         var generatedPlan = (await agent.RunAsync<TripPlan>(
-            prompt, 
+            prompt,
             cancellationToken: cancellationToken)).Result;
 
         // save plan in shared state
@@ -270,7 +268,7 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
             new PlanBuilderResult(
                 FinalPlanReady: false,
                 PlanReadyForHumanReview: false,
-                TripPlan: tripPlan), 
+                TripPlan: tripPlan),
             cancellationToken);
     }
 

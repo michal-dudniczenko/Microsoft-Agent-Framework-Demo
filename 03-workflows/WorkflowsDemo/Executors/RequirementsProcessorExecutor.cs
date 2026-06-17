@@ -1,10 +1,9 @@
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using System.Text.Json;
 using WorkflowsDemo.Events;
-using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
@@ -38,7 +37,7 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
             scopeName: SharedStateScopeName,
             cancellationToken: cancellationToken);
 
-        var prompt = JsonSerializer.Serialize(requirements, JsonSerializerPrettyPrint);
+        var prompt = JsonSerializer.Serialize(requirements);
 
         var result = (await agent.RunAsync<ProcessedTripRequirements>(prompt, cancellationToken: cancellationToken))
             .Result;
@@ -47,7 +46,7 @@ internal sealed partial class RequirementsProcessorExecutor(AIAgent agent)
         {
             Console.WriteLine("Unfortunately i am not able to come up with a plan that would satisfy your requirements."
                 + $"\nReason: {result.TripNotPossibleExplanation}");
-            
+
             await context.YieldOutputAsync(new WorkflowCompletedSignal(), cancellationToken);
             return;
         }

@@ -1,10 +1,10 @@
 using WorkflowsDemo.Models;
 
-namespace WorkflowsDemo;
+namespace WorkflowsDemo.MockData;
 
-internal static class ExampleTripRequirements
+internal static class UserRequirements
 {
-    public static readonly InitialUserTripRequirements Requirements1 = new(
+    public static InitialUserTripRequirements Data { get; } = new(
         Country: "Italy",
         City: "Rome",
         TripBudgetUsd: 2500,
@@ -15,11 +15,10 @@ internal static class ExampleTripRequirements
         AdditionalUserRequirementsInNaturalLanguage: """
             We are traveling with a 7-year-old child.
             We prefer quiet hotels rather than nightlife areas.
-            One traveler has a severe peanut allergy.
             We enjoy museums, technology exhibits, gardens, and local culture.
             We do not want attractions that require extensive walking.
             We prefer family-friendly restaurants.
             We would like to avoid very expensive restaurants.
-        """
+        """.ReplaceLineEndings(" ").Replace("    ", string.Empty)
     );
 }

@@ -1,21 +1,17 @@
-using System.Text.Json;
-
 namespace WorkflowsDemo;
 
-internal static class Constants
+internal static class Config
 {
-    public static JsonSerializerOptions JsonSerializerPrettyPrint { get; } = new() { WriteIndented = true };
-
     public const string OpenTelemetrySourceName = "Workflows.Demo";
     public const string OpenTelemetryServiceName = "WorkflowsDemo";
     public const string OpenTelemetryEndpoint = "http://localhost:4317";
 
     public const string OllamaModelName = "<OLLAMA-MODEL-NAME>";
-    public const string OllamaUrl = "<OLLAMA-URL>";
+    public const string OllamaOpenAIUrl = "<OLLAMA-URL>";
 
     public const string OpenRouterModelName = "<OPEN-ROUTER-MODEL-NAME>";
-    public const string OpenRouterApiKeyEnvVarName = "OPEN_ROUTER_API_KEY";
     public const string OpenRouterApiKey = "<OPEN-ROUTER-API-KEY>";
+    public const string OpenRouterApiKeyEnvVarName = "OPEN_ROUTER_API_KEY";
     public const string OpenRouterOpenAIUrl = "https://openrouter.ai/api/v1";
 
     public const int TotalResearchersCount = 3;

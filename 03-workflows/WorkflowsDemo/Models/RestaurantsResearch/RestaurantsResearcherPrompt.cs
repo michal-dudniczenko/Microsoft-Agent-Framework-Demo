@@ -1,6 +1,6 @@
 namespace WorkflowsDemo.Models.RestaurantsResearch;
 
-internal sealed record RestaurantResearcherPrompt(
+internal sealed record RestaurantsResearcherPrompt(
     RestaurantsResearcherTripRequirements Requirements,
     IReadOnlyList<Restaurant> PossibleRestaurants
 );

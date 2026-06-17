@@ -1,5 +1,3 @@
-using WorkflowsDemo.Models;
-using WorkflowsDemo.Models.AttractionsResearch;
 using WorkflowsDemo.Models.RestaurantsResearch;
 
 namespace WorkflowsDemo.MockData;

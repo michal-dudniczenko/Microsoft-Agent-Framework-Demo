@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.Agents.AI.DevUI;
+﻿using Microsoft.Agents.AI.DevUI;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.AspNetCore.Builder;
@@ -10,12 +9,14 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using System.Diagnostics;
 using WorkflowsDemo;
 using WorkflowsDemo.Agents;
 using WorkflowsDemo.Executors;
+using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.PlanBuilder;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 #region  OpenTelemetry Setup
 
@@ -117,7 +118,7 @@ File.WriteAllText("workflow-diagram.md", "```mermaid\n" + workflow.ToMermaidStri
 
 // ====================================================================================================================
 
-var inputData = ExampleTripRequirements.Requirements1;
+var inputData = UserRequirements.Data;
 
 StreamingRun run = await InProcessExecution.RunStreamingAsync(workflow, inputData);
 await foreach (WorkflowEvent evt in run.WatchStreamAsync())

@@ -1,11 +1,10 @@
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
-using WorkflowsDemo.MockData;
+using System.Text.Json;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.PlanBuilder;
 using WorkflowsDemo.Models.PlanReviewer;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
@@ -26,11 +25,10 @@ internal sealed partial class PlanReviewerExecutor(AIAgent agent)
         ) ?? throw new InvalidOperationException("Trip requirements are missing from the state.");
 
         var prompt = JsonSerializer.Serialize(
-            new PlanReviewerPrompt(Requirements: requirements, TripPlan: planBuilderResult.TripPlan),
-            JsonSerializerPrettyPrint);
+            new PlanReviewerPrompt(Requirements: requirements, TripPlan: planBuilderResult.TripPlan));
 
         var result = (await agent.RunAsync<PlanReviewerFeedback>(
-            prompt, 
+            prompt,
             cancellationToken: cancellationToken)).Result;
 
         return result;

@@ -1,11 +1,11 @@
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.AccommodationResearch;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
@@ -42,8 +42,7 @@ internal sealed partial class AccommodationResearcherExecutor(AIAgent agent)
             fullRequirements.TripBudgetUsd);
 
         var prompt = JsonSerializer.Serialize(
-            new AccommodationResearcherPrompt(relevantRequirements, allAccommodationOptions),
-            JsonSerializerPrettyPrint);
+            new AccommodationResearcherPrompt(relevantRequirements, allAccommodationOptions));
 
         var result = (await agent.RunAsync<List<AccommodationRankingItem>>(
             prompt,

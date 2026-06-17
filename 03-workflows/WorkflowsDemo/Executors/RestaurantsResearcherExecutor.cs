@@ -1,11 +1,11 @@
-using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.RestaurantsResearch;
-using static WorkflowsDemo.Constants;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
@@ -42,9 +42,8 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
             fullRequirements.TripBudgetUsd);
 
         var prompt = JsonSerializer.Serialize(
-            new RestaurantResearcherPrompt(relevantRequirements, allRestaurantsOptions),
-            JsonSerializerPrettyPrint);
-        
+            new RestaurantResearcherPrompt(relevantRequirements, allRestaurantsOptions));
+
         var result = (await agent.RunAsync<List<RestaurantRankingItem>>(
             prompt,
             cancellationToken: cancellationToken)).Result;

@@ -1,13 +1,13 @@
+using Microsoft.Agents.AI.Workflows;
 using System.Globalization;
 using System.Net;
 using System.Text;
-using Microsoft.Agents.AI.Workflows;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.Models.PlanBuilder;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class PlanRendererExecutor() 
+internal sealed partial class PlanRendererExecutor()
     : Executor(nameof(PlanRendererExecutor))
 {
     protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder protocolBuilder)
@@ -34,10 +34,7 @@ internal sealed partial class PlanRendererExecutor()
         Console.WriteLine("PlanRendererExecutor runs, renders trip plan in the html format");
 
         ArgumentNullException.ThrowIfNull(result);
-
         ArgumentNullException.ThrowIfNull(result.TripPlan);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         var outputPath = Path.Combine(Directory.GetCurrentDirectory(), OutputFileName);
         var temporaryPath = Path.Combine(
@@ -53,7 +50,6 @@ internal sealed partial class PlanRendererExecutor()
                 new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
                 cancellationToken);
 
-            cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, outputPath, overwrite: true);
         }
         finally

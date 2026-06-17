@@ -1,0 +1,26 @@
+{
+  "IsTripPossible": true,
+  "TripNotPossibleExplanation": "",
+  "Country": "Italy",
+  "City": "Rome",
+  "TripBudgetUsd": 2500,
+  "TripArrivalDateTime": "2026-06-17T12:49:18.2229061+02:00",
+  "TripDepartureDateTime": "2026-06-20T12:49:18.2259628+02:00",
+  "NumberOfAdults": 2,
+  "NumberOfChildren": 1,
+  "AdditionalUserRequirementsInNaturalLanguage": "We are traveling with a 7-year-old child. We prefer quiet hotels rather than nightlife areas. We enjoy museums, technology exhibits, gardens, and local culture. We do not want attractions that require extensive walking. We prefer family-friendly restaurants. We would like to avoid very expensive restaurants.",
+  "RequirementsUsefulForAttractionsResearcherAgent": [
+    "Enjoy museums, technology exhibits, gardens, and local culture",
+    "Avoid attractions requiring extensive walking",
+    "Age group includes 7-year-old child",
+    "Requires family-friendly activities"
+  ],
+  "RequirementsUsefulForAccommodationResearcherAgent": [
+    "Prefers quiet hotel (avoid nightlife areas)",
+    "Suitable for family (Adults: 2, Children: 1)"
+  ],
+  "RequirementsUsefulForRestaurantsResearcherAgent": [
+    "Prefers family-friendly restaurants",
+    "Must avoid very expensive restaurants"
+  ]
+}

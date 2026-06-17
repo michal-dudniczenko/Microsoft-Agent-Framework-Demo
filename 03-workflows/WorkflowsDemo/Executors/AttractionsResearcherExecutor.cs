@@ -46,10 +46,17 @@ internal sealed partial class AttractionsResearcherExecutor(
         var prompt = JsonSerializer.Serialize(
             new AttractionsResearcherPrompt(relevantRequirements, allAttractionsOptions));
 
-        var result = (await agent.RunAsync<List<AttractionsRankingItem>>(
-            prompt,
-            cancellationToken: cancellationToken)).Result;
-        
+        // File.WriteAllText("agent-prompts/attractions-researcher-prompt.txt", prompt);
+
+        // var result = (await agent.RunAsync<List<AttractionsRankingItem>>(
+        //     prompt,
+        //     cancellationToken: cancellationToken)).Result;
+
+        var result = JsonSerializer.Deserialize<List<AttractionsRankingItem>>(
+            File.ReadAllText("agent-responses/attractions-researcher-response.txt")
+        );
+        await Task.Delay(7000);
+
         result.SaveModelResponse(fileName: agent.Id);
 
         var attractionOptionsById = allAttractionsOptions.ToDictionary(

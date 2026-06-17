@@ -1,0 +1,394 @@
+{
+  "Summary": {
+    "Destination": "Rome, Italy",
+    "ArrivalDateTime": "2026-06-17T13:04:41",
+    "DepartureDateTime": "2026-06-20T13:04:41",
+    "NumberOfAdults": 2,
+    "NumberOfChildren": 1,
+    "TotalEstimatedCostUsd": 1042,
+    "BudgetUsd": 2500,
+    "RemainingBudgetUsd": 1458,
+    "TripStyle": "Family Culture & Museums",
+    "ShortDescription": "A relaxed 3-day Rome family getaway based in the quiet Aventino district, blending museums, gardens, and iconic low-walking landmarks with family-friendly dining."
+  },
+  "Accommodation": {
+    "Name": "Aventine Family Retreat",
+    "Type": "Family Hotel",
+    "TotalStayPriceUsd": 660,
+    "District": "Aventino",
+    "Latitude": 41.8826,
+    "Longitude": 12.4834,
+    "KeyAmenities": [
+      "WiFi",
+      "Family Rooms",
+      "Breakfast Included",
+      "Play Area"
+    ],
+    "WhySelected": [
+      "Explicitly designed as a Family Hotel with Family Rooms and a Play Area, ideal for a 7-year-old child.",
+      "Located in the quiet Aventino district, directly matching the request to avoid nightlife areas.",
+      "Total stay cost of $660 leaves substantial budget for attractions and dining.",
+      "Walking distance to Orange Garden, a low-exertion outdoor attraction fitting the 'minimal walking' preference."
+    ]
+  },
+  "Days": [
+    {
+      "Date": "2026-06-17",
+      "DayTheme": "Arrival & Gentle Aventino Introduction",
+      "Items": [
+        {
+          "Type": 0,
+          "Title": "Arrival in Rome",
+          "StartTime": "2026-06-17T13:04:41",
+          "EndTime": "2026-06-17T14:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.92,
+          "Description": "Arrival into Rome to begin the family trip."
+        },
+        {
+          "Type": 8,
+          "Title": "Transport to Hotel",
+          "StartTime": "2026-06-17T14:00:00",
+          "EndTime": "2026-06-17T15:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 1,
+          "Description": "Transfer from the airport to the Aventine Family Retreat in the Aventino district."
+        },
+        {
+          "Type": 2,
+          "Title": "Check-in at Aventine Family Retreat",
+          "StartTime": "2026-06-17T15:00:00",
+          "EndTime": "2026-06-17T15:30:00",
+          "District": "Aventino",
+          "Latitude": 41.8826,
+          "Longitude": 12.4834,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "Check in and settle into the family-friendly hotel after travel."
+        },
+        {
+          "Type": 7,
+          "Title": "Rest and Settle In",
+          "StartTime": "2026-06-17T15:30:00",
+          "EndTime": "2026-06-17T17:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 1.5,
+          "Description": "Free time to rest after arrival, especially helpful with a young child after travel."
+        },
+        {
+          "Type": 4,
+          "Title": "Orange Garden",
+          "StartTime": "2026-06-17T17:15:00",
+          "EndTime": "2026-06-17T18:00:00",
+          "District": "Aventino",
+          "Latitude": 41.8856,
+          "Longitude": 12.4801,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.75,
+          "Description": "A short, peaceful walk through shaded garden paths near the hotel, with panoramic views of Rome at sunset, ideal for an easy first outing."
+        },
+        {
+          "Type": 5,
+          "Title": "Dinner at Nannarella",
+          "StartTime": "2026-06-17T19:00:00",
+          "EndTime": "2026-06-17T20:30:00",
+          "District": "Trastevere",
+          "Latitude": 41.8889,
+          "Longitude": 12.4681,
+          "EstimatedCostUsd": 75,
+          "DurationHours": 1.5,
+          "Description": "Relaxed family dinner at a lively, affordable Trastevere trattoria serving traditional Roman comfort food."
+        }
+      ],
+      "DaySummary": "A light arrival day focused on rest, a gentle garden stroll near the hotel, and an easy family dinner in nearby Trastevere."
+    },
+    {
+      "Date": "2026-06-18",
+      "DayTheme": "Vatican Museums & Religious Landmarks",
+      "Items": [
+        {
+          "Type": 8,
+          "Title": "Transport to Vaticano District",
+          "StartTime": "2026-06-18T08:30:00",
+          "EndTime": "2026-06-18T09:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "Travel from Aventino to the Vaticano district for the day's museum visit."
+        },
+        {
+          "Type": 4,
+          "Title": "Vatican Museums",
+          "StartTime": "2026-06-18T09:00:00",
+          "EndTime": "2026-06-18T12:30:00",
+          "District": "Vaticano",
+          "Latitude": 41.9065,
+          "Longitude": 12.4536,
+          "EstimatedCostUsd": 57,
+          "DurationHours": 3.5,
+          "Description": "A morning exploring Renaissance art, history, and treasured collections, well-suited to the family's interest in museums and culture."
+        },
+        {
+          "Type": 6,
+          "Title": "Short Break",
+          "StartTime": "2026-06-18T12:30:00",
+          "EndTime": "2026-06-18T13:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "Brief rest after the museum visit before lunch."
+        },
+        {
+          "Type": 5,
+          "Title": "Lunch at Pizzarium",
+          "StartTime": "2026-06-18T13:00:00",
+          "EndTime": "2026-06-18T13:45:00",
+          "District": "Prati",
+          "Latitude": 41.9073,
+          "Longitude": 12.4465,
+          "EstimatedCostUsd": 40,
+          "DurationHours": 0.75,
+          "Description": "Quick, casual pizza al taglio lunch near the Vatican area, easy and budget-friendly for the family."
+        },
+        {
+          "Type": 4,
+          "Title": "St. Peter's Basilica",
+          "StartTime": "2026-06-18T14:00:00",
+          "EndTime": "2026-06-18T16:00:00",
+          "District": "Vaticano",
+          "Latitude": 41.9022,
+          "Longitude": 12.4539,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 2,
+          "Description": "Free, indoor visit to the iconic basilica, complementing the museum visit with architectural and cultural significance, minimal extra walking required."
+        },
+        {
+          "Type": 7,
+          "Title": "Free Time / Rest at Hotel",
+          "StartTime": "2026-06-18T16:30:00",
+          "EndTime": "2026-06-18T18:30:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 2,
+          "Description": "Return to the hotel area for rest before dinner, balancing a busy morning with downtime for the child."
+        },
+        {
+          "Type": 5,
+          "Title": "Dinner at Da Francesco",
+          "StartTime": "2026-06-18T19:00:00",
+          "EndTime": "2026-06-18T20:30:00",
+          "District": "Centro Storico",
+          "Latitude": 41.8996,
+          "Longitude": 12.4724,
+          "EstimatedCostUsd": 88,
+          "DurationHours": 1.5,
+          "Description": "Family-friendly Roman dinner near Centro Storico with classic dishes and vegetarian options."
+        }
+      ],
+      "DaySummary": "A culture-focused day centered on the Vatican Museums and St. Peter's Basilica, paired with easy meals and built-in rest periods to keep pacing comfortable for a 7-year-old."
+    },
+    {
+      "Date": "2026-06-19",
+      "DayTheme": "Historic Center: Pantheon, Fountains & Local Charm",
+      "Items": [
+        {
+          "Type": 8,
+          "Title": "Transport to Centro Storico",
+          "StartTime": "2026-06-19T09:30:00",
+          "EndTime": "2026-06-19T10:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "Travel from Aventino to the historic city center for the day's sightseeing."
+        },
+        {
+          "Type": 4,
+          "Title": "Pantheon",
+          "StartTime": "2026-06-19T10:00:00",
+          "EndTime": "2026-06-19T11:00:00",
+          "District": "Centro Storico",
+          "Latitude": 41.8986,
+          "Longitude": 12.4769,
+          "EstimatedCostUsd": 10,
+          "DurationHours": 1,
+          "Description": "Indoor visit to the ancient, well-preserved Pantheon, requiring minimal walking and offering rich historical context."
+        },
+        {
+          "Type": 4,
+          "Title": "Piazza Navona",
+          "StartTime": "2026-06-19T11:15:00",
+          "EndTime": "2026-06-19T12:15:00",
+          "District": "Centro Storico",
+          "Latitude": 41.8992,
+          "Longitude": 12.4731,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 1,
+          "Description": "A leisurely stroll through the lively piazza with street artists and cafés, offering local atmosphere at an easy pace just steps from the Pantheon."
+        },
+        {
+          "Type": 5,
+          "Title": "Lunch at Mercato Centrale",
+          "StartTime": "2026-06-19T12:30:00",
+          "EndTime": "2026-06-19T13:45:00",
+          "District": "Esquilino",
+          "Latitude": 41.9012,
+          "Longitude": 12.5018,
+          "EstimatedCostUsd": 62,
+          "DurationHours": 1.25,
+          "Description": "Relaxed food hall lunch with diverse options to suit the whole family, including vegetarian and gluten-free choices."
+        },
+        {
+          "Type": 4,
+          "Title": "Basilica di Santa Maria Maggiore",
+          "StartTime": "2026-06-19T14:00:00",
+          "EndTime": "2026-06-19T15:00:00",
+          "District": "Esquilino",
+          "Latitude": 41.8975,
+          "Longitude": 12.4986,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 1,
+          "Description": "Free, indoor visit to admire stunning mosaics and architecture, a quiet cultural stop near the lunch spot."
+        },
+        {
+          "Type": 6,
+          "Title": "Afternoon Break",
+          "StartTime": "2026-06-19T15:00:00",
+          "EndTime": "2026-06-19T15:45:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.75,
+          "Description": "Brief downtime before heading toward the final sightseeing stop of the day."
+        },
+        {
+          "Type": 4,
+          "Title": "Trevi Fountain",
+          "StartTime": "2026-06-19T16:15:00",
+          "EndTime": "2026-06-19T16:45:00",
+          "District": "Trevi",
+          "Latitude": 41.9009,
+          "Longitude": 12.4833,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "A quick, iconic stop at Rome's most famous fountain, requiring minimal time and walking."
+        },
+        {
+          "Type": 7,
+          "Title": "Free Time / Return to Hotel",
+          "StartTime": "2026-06-19T17:00:00",
+          "EndTime": "2026-06-19T19:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 2,
+          "Description": "Time to relax and head back toward the hotel area before dinner."
+        },
+        {
+          "Type": 5,
+          "Title": "Dinner at Tonnarello",
+          "StartTime": "2026-06-19T19:15:00",
+          "EndTime": "2026-06-19T20:45:00",
+          "District": "Trastevere",
+          "Latitude": 41.8895,
+          "Longitude": 12.4684,
+          "EstimatedCostUsd": 80,
+          "DurationHours": 1.5,
+          "Description": "Popular, affordable casual dinner in Trastevere with no reservation needed, a relaxed close to the day."
+        }
+      ],
+      "DaySummary": "A full but comfortably paced day in the historic center covering the Pantheon, Piazza Navona, two beautiful basilicas, and the Trevi Fountain, all low-walking stops geographically clustered together, with relaxed meals bookending the day."
+    },
+    {
+      "Date": "2026-06-20",
+      "DayTheme": "Light Morning & Departure",
+      "Items": [
+        {
+          "Type": 7,
+          "Title": "Breakfast & Free Time at Hotel",
+          "StartTime": "2026-06-20T08:00:00",
+          "EndTime": "2026-06-20T10:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 2,
+          "Description": "Relaxed included breakfast and free time to pack at the hotel before checkout."
+        },
+        {
+          "Type": 3,
+          "Title": "Check-out from Aventine Family Retreat",
+          "StartTime": "2026-06-20T10:00:00",
+          "EndTime": "2026-06-20T10:30:00",
+          "District": "Aventino",
+          "Latitude": 41.8826,
+          "Longitude": 12.4834,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.5,
+          "Description": "Check out of the hotel ahead of departure."
+        },
+        {
+          "Type": 4,
+          "Title": "Castel Sant'Angelo",
+          "StartTime": "2026-06-20T11:00:00",
+          "EndTime": "2026-06-20T12:45:00",
+          "District": "Borgo",
+          "Latitude": 41.9031,
+          "Longitude": 12.4663,
+          "EstimatedCostUsd": 37,
+          "DurationHours": 1.75,
+          "Description": "A final light visit combining indoor museum exhibits with rooftop views, a fitting wrap-up before heading to the airport."
+        },
+        {
+          "Type": 8,
+          "Title": "Transport to Airport",
+          "StartTime": "2026-06-20T12:45:00",
+          "EndTime": "2026-06-20T13:00:00",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.25,
+          "Description": "Transfer from Castel Sant'Angelo area to the airport for departure."
+        },
+        {
+          "Type": 1,
+          "Title": "Departure from Rome",
+          "StartTime": "2026-06-20T13:00:00",
+          "EndTime": "2026-06-20T13:04:41",
+          "District": null,
+          "Latitude": null,
+          "Longitude": null,
+          "EstimatedCostUsd": 0,
+          "DurationHours": 0.08,
+          "Description": "Departure concluding the family trip to Rome."
+        }
+      ],
+      "DaySummary": "A light final morning with breakfast, checkout, and one easy museum stop at Castel Sant'Angelo before heading to the airport for departure."
+    }
+  ],
+  "Warnings": [
+    "Da Francesco (dinner on 2026-06-18) has ReservationRecommended = true; booking ahead is advised.",
+    "Mamma Angela and Ai Tre Scalini were not used due to ReservationRecommended = true combined with less central locations relative to the day's geographic clusters, but Da Francesco was retained despite its recommendation flag due to strong family fit; reservation is advised.",
+    "Some outdoor stops (Piazza Navona, Trevi Fountain, Orange Garden) involve light walking; pacing was kept easy with breaks and free time blocks to accommodate the 7-year-old and the 'avoid extensive walking' preference."
+  ],
+  "OverallExplanation": "The Aventine Family Retreat was selected for its explicit Family Hotel designation, dedicated family rooms and play area, and location in the quiet Aventino district, directly satisfying the request to avoid nightlife areas while leaving most of the $2,500 budget free for activities and dining. The itinerary opens gently on arrival day with rest time and a short garden walk, builds to a fuller but still measured Vatican Museums day, peaks with a geographically clustered historic-center day covering the Pantheon, Piazza Navona, two basilicas, and the Trevi Fountain, and closes with a light departure-day museum stop at Castel Sant'Angelo. All attractions chosen have MinimumAge of 0 and favor short, low-exertion visits (gardens, indoor museums, brief landmark stops) to suit the 7-year-old and the stated preference against extensive walking. Restaurant choices are casual, family-friendly, and modestly priced, avoiding expensive dining as requested. Total estimated cost of $1,042 comfortably fits within the $2,500 budget, leaving room for incidentals, with all selections drawn strictly from the provided options."
+}

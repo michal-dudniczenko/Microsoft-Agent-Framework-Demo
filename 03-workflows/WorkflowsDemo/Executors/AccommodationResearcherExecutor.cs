@@ -45,11 +45,18 @@ internal sealed partial class AccommodationResearcherExecutor(
 
         var prompt = JsonSerializer.Serialize(
             new AccommodationResearcherPrompt(relevantRequirements, allAccommodationOptions));
-
-        var result = (await agent.RunAsync<List<AccommodationRankingItem>>(
-            prompt,
-            cancellationToken: cancellationToken)).Result;
         
+        // File.WriteAllText("agent-prompts/accommodation-researcher-prompt.txt", prompt);
+
+        // var result = (await agent.RunAsync<List<AccommodationRankingItem>>(
+        //     prompt,
+        //     cancellationToken: cancellationToken)).Result;
+
+        var result = JsonSerializer.Deserialize<List<AccommodationRankingItem>>(
+            File.ReadAllText("agent-responses/accommodation-researcher-response.txt")
+        );
+        await Task.Delay(5000);
+
         result.SaveModelResponse(fileName: agent.Id);
 
         var accommodationOptionsById = allAccommodationOptions.ToDictionary(

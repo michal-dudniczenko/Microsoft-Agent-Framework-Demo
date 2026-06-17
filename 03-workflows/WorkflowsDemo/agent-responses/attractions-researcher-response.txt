@@ -1,0 +1,42 @@
+[
+  {
+    "AttractionId": "rome-attraction-001",
+    "RankReasoning": "Pantheon is an excellent match: indoor historical architecture with minimal walking, highly rated (4.8), very affordable ($10), and 1-hour duration fits the itinerary. Family-friendly and wheelchair-accessible align with requirements."
+  },
+  {
+    "AttractionId": "rome-attraction-010",
+    "RankReasoning": "Basilica di Santa Maria Maggiore is free, indoor, highly rated (4.8), and features stunning mosaics and architecture. 1-hour visit fits well within the 3-day schedule. Wheelchair-accessible and aligned with cultural/local experience preferences."
+  },
+  {
+    "AttractionId": "rome-attraction-012",
+    "RankReasoning": "Vatican Museums is a premier museum with art, history, and Renaissance masterpieces—directly matching technology exhibits and museum interests. 3.5-hour duration is manageable. Child pricing available ($13). Highly rated (4.6) with 186,700 reviews. Reasonable cost ($57 total) relative to $2500 budget."
+  },
+  {
+    "AttractionId": "rome-attraction-013",
+    "RankReasoning": "St. Peter's Basilica is free, iconic, and indoor with architectural significance. 2-hour duration fits schedule. Family-friendly and highly rated (4.8). Complements Vatican Museums visit and provides cultural/local experience."
+  },
+  {
+    "AttractionId": "rome-attraction-014",
+    "RankReasoning": "Castel Sant'Angelo combines indoor museum exhibits with outdoor ramparts and rooftop views. 1.75-hour visit, reasonable cost ($37), family-friendly, and highly rated (4.7). Panoramic views and historical context match local culture interests."
+  },
+  {
+    "AttractionId": "rome-attraction-003",
+    "RankReasoning": "Piazza Navona is free, outdoor but walkable at a leisurely pace, highly rated (4.7), and family-friendly. 1-hour duration fits well. Food-nearby tag supports local culture experience; artists and cafés provide atmospheric learning without extensive walking."
+  },
+  {
+    "AttractionId": "rome-attraction-004",
+    "RankReasoning": "Santa Maria in Trastevere is free, indoor, and atmospheric with beautiful mosaics. 0.75-hour duration is minimal. Highly rated (4.7) and quiet environment suits the family. Located in charming Trastevere district for local culture exploration."
+  },
+  {
+    "AttractionId": "rome-attraction-015",
+    "RankReasoning": "Orange Garden is free, outdoor but with shaded paths ideal for avoiding extensive walking. 0.75-hour duration, peaceful, romantic, and highly rated (4.7). Panoramic views of Rome provide local perspective without major physical demands."
+  },
+  {
+    "AttractionId": "rome-attraction-002",
+    "RankReasoning": "Trevi Fountain is free, iconic, and a quick 0.5-hour visit. Highly rated (4.8) with 394,800 reviews. Family-friendly and photogenic. Though outdoor and crowded, the minimal time commitment and cultural significance justify inclusion. A must-see local icon."
+  },
+  {
+    "AttractionId": "rome-attraction-020",
+    "RankReasoning": "Spanish Steps is free, outdoor, and highly rated (4.6). 0.75-hour duration fits easily. Family-friendly and iconic. Though involves climbing stairs, it is a quintessential Roman experience and can be experienced at own pace without time pressure."
+  }
+]

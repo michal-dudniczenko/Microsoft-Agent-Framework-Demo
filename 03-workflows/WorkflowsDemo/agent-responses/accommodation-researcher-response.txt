@@ -1,0 +1,22 @@
+[
+  {
+    "AccommodationId": "rome-006",
+    "RankReasoning": "Best match for this family trip: explicitly designed as a Family Hotel with Family Rooms and Play Area, 4.7 rating, peaceful Aventino area explicitly noted as quiet, $660 total cost leaves ample budget for activities, and reviews highlight it's great for children and spacious."
+  },
+  {
+    "AccommodationId": "rome-005",
+    "RankReasoning": "Strong second choice: quiet neighborhood explicitly mentioned in reviews, mid-range at $390 total with excellent budget room, 4.5 rating, family-suitable with breakfast included, and near Vatican attractions without nightlife-heavy area complaints."
+  },
+  {
+    "AccommodationId": "rome-003",
+    "RankReasoning": "Solid family option with kitchen and laundry amenities at $480 total, 4.7 rating, and walkable Monti area, though it lacks explicit family-room features and is adjacent to more touristy zones compared to quieter alternatives."
+  },
+  {
+    "AccommodationId": "rome-015",
+    "RankReasoning": "Good value at $570 with 4.6 rating and Monti location near Colosseum, but the trendy neighborhood and rooftop terrace suggest moderate nightlife activity, making it less ideal for the quiet preference despite quality amenities."
+  },
+  {
+    "AccommodationId": "rome-020",
+    "RankReasoning": "Budget-friendly at $510 with 4.4 rating in quiet Flaminio neighborhood, contemporary design, and museum proximity, but farther from major attractions (3 km) and limited family-specific amenities make it a secondary option."
+  }
+]

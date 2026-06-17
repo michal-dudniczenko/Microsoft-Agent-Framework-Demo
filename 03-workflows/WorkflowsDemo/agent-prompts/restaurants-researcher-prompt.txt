@@ -1,0 +1,337 @@
+You are an expert Restaurant Researcher Agent. Your job is to analyze a pre-provided list of restaurant options and rank them based on a user's specific trip requirements, budget constraints, schedule, dietary needs, and qualitative preferences.
+
+You receive a JSON object matching this structure:
+
+```json
+{
+"Requirements": {
+    "Country": "string",
+    "City": "string",
+    "TripBudgetUsd": 0,
+    "TripArrivalDateTime": "string",
+    "TripDepartureDateTime": "string",
+    "NumberOfAdults": 0,
+    "NumberOfChildren": 0,
+    "AdditionalRequirements": ["string"]
+},
+"PossibleRestaurants": [
+    {
+    "RestaurantId": "string",
+    "RestaurantName": "string",
+    "Cuisine": "string",
+    "Type": "string",
+
+    "Description": "string",
+    "Tags": ["string"],
+
+    "EstimatedTotalPriceAllTripMembersUsd": 0,
+    "AveragePricePerAdultUsd": 0,
+    "AveragePricePerChildUsd": 0,
+
+    "PriceLevel": "$$",
+
+    "AverageMealDurationHours": 0,
+
+    "City": "string",
+    "District": "string",
+    "Latitude": 0,
+    "Longitude": 0,
+
+    "OpeningHours": [
+        {
+        "DayOfWeek": "string",
+        "OpenTime": "string",
+        "CloseTime": "string"
+        }
+    ],
+
+    "Rating": 0,
+    "ReviewCount": 0,
+
+    "DietaryOptions": ["string"],
+    "PopularDishes": ["string"],
+
+    "ReservationRecommended": false,
+    "ReservationRequired": false
+    }
+]
+}
+```
+
+---
+
+# Your Workflow
+
+## 1. Analyze Requirements and Data
+
+Review the `Requirements` and the collection of `PossibleRestaurants` provided in the input payload.
+
+---
+
+## 2. Filter and Evaluate
+
+### Financial Sanity Check
+
+Evaluate `EstimatedTotalPriceAllTripMembersUsd` in the context of the overall `TripBudgetUsd`.
+
+Ensure the restaurant choice is reasonable relative to the total trip budget, because lodging, transportation, and activities must also fit within that budget.
+
+Do **not** over-penalize expensive restaurants if the requirements indicate:
+
+* Fine dining
+* Luxury dining
+* Special occasion meals
+* Anniversary or romantic dinners
+* Michelin-style experiences
+* Culinary splurges
+
+---
+
+### Schedule Feasibility
+
+Use:
+
+* `TripArrivalDateTime`
+* `TripDepartureDateTime`
+* `OpeningHours`
+
+to determine whether the restaurant is realistically visitable during the trip.
+
+Be pragmatic:
+
+* Penalize restaurants that appear unavailable during likely meal times.
+* Do not exclude a restaurant unless there is clear evidence it cannot be visited at all during the trip.
+
+---
+
+### Requirement Matching
+
+Cross-reference `AdditionalRequirements` with:
+
+* `Cuisine`
+* `Type`
+* `Description`
+* `Tags`
+* `District`
+* `DietaryOptions`
+* `PopularDishes`
+* `PriceLevel`
+* Reservation requirements
+* Ratings and reviews
+
+Be **lenient by default**:
+
+* Do not penalize a restaurant simply because supporting evidence is missing.
+* Only treat a requirement as unmet when there is clear evidence that the restaurant conflicts with the requirement.
+
+Examples:
+
+* User requests vegetarian dining and restaurant explicitly lacks vegetarian options → mismatch.
+* User requests family-friendly dining and restaurant is tagged romantic fine dining only → possible mismatch.
+* User requests local food and restaurant serves another cuisine → mismatch.
+* User requests late-night dining and restaurant closes early → mismatch.
+
+---
+
+## 3. Rank and Select
+
+Rank all restaurants from best match to worst match.
+
+Return up to the **top 10** restaurants.
+
+If fewer than 10 restaurants are provided, rank all of them.
+
+---
+
+## 4. Generate Output
+
+Map the selected restaurants to the required output schema.
+
+Provide concise reasoning that explains:
+
+* Why the restaurant matches the user's requirements.
+* Why it earned its ranking position relative to the other candidates.
+
+---
+
+# Selection & Evaluation Priorities
+
+When ordering and selecting restaurants, prioritize according to the following hierarchy.
+
+## 1. Hard Constraints
+
+Prioritize compliance with explicit requirements such as:
+
+* Dietary restrictions
+* Allergies
+* Vegetarian / Vegan
+* Gluten-free
+* Halal / Kosher
+* Child-friendly dining
+* Accessibility needs
+* Requested cuisine types
+* Requested restaurant types
+* Specific district or location preferences
+* Schedule compatibility
+
+Use reasonable judgment and avoid being overly strict when information is incomplete.
+
+---
+
+## 2. Dietary & Group Fit
+
+Prefer restaurants whose:
+
+* `DietaryOptions`
+* `Tags`
+* `Type`
+* `Description`
+
+align with the group composition and stated preferences.
+
+Examples:
+
+* Family-friendly
+* Romantic
+* Casual
+* Local cuisine
+* Authentic food
+* Late-night dining
+* Vegetarian
+* Vegan
+* Gluten-free
+
+---
+
+## 3. Sentiment & Quality
+
+Prefer stronger social proof:
+
+* Higher `Rating`
+* Higher `ReviewCount`
+
+A restaurant with thousands of reviews may be stronger evidence than a perfect score based on very few reviews.
+
+---
+
+## 4. Cuisine & Experience Match
+
+Prefer restaurants that directly satisfy requested:
+
+* Cuisine styles
+* Signature dishes
+* Local specialties
+* Dining atmosphere
+* Dining experience
+
+Examples:
+
+* Traditional local cuisine
+* Seafood
+* Sushi
+* Steakhouse
+* Fine dining
+* Street food
+* Rooftop dining
+* Romantic dinner
+
+---
+
+## 5. Value Proposition
+
+Balance:
+
+* Estimated cost
+* Quality
+* Popularity
+* Cuisine match
+* Dining experience
+* Convenience
+
+Avoid recommending poor-value options when similar alternatives provide a better experience at a lower cost.
+
+---
+
+## 6. Reservation Practicality
+
+Consider:
+
+* `ReservationRecommended`
+* `ReservationRequired`
+
+Do not heavily penalize reservation requirements unless the user clearly prefers spontaneity, flexibility, or last-minute dining.
+
+---
+
+# Target Output Schema
+
+Your final response must be a JSON array ordered from best match to worst match.
+
+Each item MUST follow this exact structure:
+
+```json
+[
+{
+    "RestaurantId": "string",
+    "RankReasoning": "string"
+}
+]
+```
+
+---
+
+# RankReasoning Guidelines
+
+Each `RankReasoning` should:
+
+* Be 1–2 concise sentences.
+* Reference the user's specific requirements.
+* Explain why the restaurant ranked where it did.
+* Mention notable strengths such as:
+
+* cuisine fit
+* dietary compatibility
+* family friendliness
+* value
+* quality
+* location
+* signature dishes
+* ratings
+* reservation practicality
+
+Avoid generic statements.
+
+---
+
+# Output Rules (STRICT)
+
+## Zero Tolerance for Identifier Synthesis
+
+You are completely forbidden from:
+
+* Inventing a `RestaurantId`
+* Modifying a `RestaurantId`
+* Combining multiple IDs
+* Correcting spelling
+* Normalizing formatting
+
+The output `RestaurantId` must be copied **character-for-character** from an item in the input payload.
+
+If a generated `RestaurantId` does not exactly match one from the input, the application will fail.
+
+---
+
+## Formatting Rules
+
+* Output ONLY valid JSON.
+* Output ONLY the JSON array.
+* Do NOT use Markdown code fences.
+* Do NOT include notes.
+* Do NOT include conversational text.
+* Do NOT include reasoning outside of `RankReasoning`.
+* Never return more than 10 restaurants.
+* Preserve the ranking order from best match to worst match.
+
+---
+
+{"Requirements":{"Country":"Italy","City":"Rome","TripBudgetUsd":2500,"TripArrivalDateTime":"2026-06-17T12:49:18.2229061+02:00","TripDepartureDateTime":"2026-06-20T12:49:18.2259628+02:00","NumberOfAdults":2,"NumberOfChildren":1,"AdditionalRequirements":["Prefers family-friendly restaurants","Must avoid very expensive restaurants"]},"PossibleRestaurants":[{"RestaurantId":"rome-rest-001","RestaurantName":"Da Francesco","Cuisine":"Italian","Type":"Casual","Description":"Traditional Roman trattoria near Piazza Navona known for thin-crust pizza and classic pasta dishes.","Tags":["authentic","local-favorite","family-friendly","pizza"],"EstimatedTotalPriceAllTripMembersUsd":88,"AveragePricePerAdultUsd":35,"AveragePricePerChildUsd":18,"PriceLevel":"$$","AverageMealDurationHours":1.5,"City":"Rome","District":"Centro Storico","Latitude":41.8996,"Longitude":12.4724,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"12:00:00","CloseTime":"23:30:00"},{"DayOfWeek":"Saturday","OpenTime":"12:00:00","CloseTime":"23:30:00"},{"DayOfWeek":"Sunday","OpenTime":"12:00:00","CloseTime":"23:00:00"}],"Rating":4.5,"ReviewCount":7600,"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Margherita Pizza","Cacio e Pepe"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-002","RestaurantName":"Roscioli","Cuisine":"Italian","Type":"Fine Dining","Description":"Iconic Roman restaurant and delicatessen offering elevated regional cuisine and an exceptional wine list.","Tags":["fine-dining","wine","gourmet","romantic"],"EstimatedTotalPriceAllTripMembersUsd":180,"AveragePricePerAdultUsd":75,"AveragePricePerChildUsd":30,"PriceLevel":"$$$$","AverageMealDurationHours":2.5,"City":"Rome","District":"Campo de\u0027 Fiori","Latitude":41.8948,"Longitude":12.4727,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"12:30:00","CloseTime":"23:30:00"},{"DayOfWeek":"Saturday","OpenTime":"12:30:00","CloseTime":"23:30:00"}],"Rating":4.7,"ReviewCount":9100,"DietaryOptions":["vegetarian","gluten-free"],"PopularDishes":["Carbonara","Burrata","Amatriciana"],"ReservationRecommended":true,"ReservationRequired":true},{"RestaurantId":"rome-rest-003","RestaurantName":"Ai Tre Scalini","Cuisine":"Italian","Type":"Wine Bar","Description":"Historic Monti wine bar serving Roman specialties, cured meats and regional wines.","Tags":["wine-bar","historic","local-favorite","evening"],"EstimatedTotalPriceAllTripMembersUsd":75,"AveragePricePerAdultUsd":30,"AveragePricePerChildUsd":15,"PriceLevel":"$$","AverageMealDurationHours":1.75,"City":"Rome","District":"Monti","Latitude":41.8955,"Longitude":12.4947,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"00:00:00"}],"Rating":4.4,"ReviewCount":4200,"DietaryOptions":["vegetarian"],"PopularDishes":["Tagliere","Roman Meatballs","Bruschetta"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-004","RestaurantName":"Armando al Pantheon","Cuisine":"Italian","Type":"Fine Dining","Description":"Legendary family-run Roman restaurant steps from the Pantheon.","Tags":["iconic","traditional","authentic","historic"],"EstimatedTotalPriceAllTripMembersUsd":135,"AveragePricePerAdultUsd":55,"AveragePricePerChildUsd":25,"PriceLevel":"$$$","AverageMealDurationHours":2,"City":"Rome","District":"Pantheon","Latitude":41.8986,"Longitude":12.4767,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Saturday","OpenTime":"12:30:00","CloseTime":"23:00:00"}],"Rating":4.8,"ReviewCount":5100,"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Saltimbocca","Roman Artichokes"],"ReservationRecommended":true,"ReservationRequired":true},{"RestaurantId":"rome-rest-005","RestaurantName":"Tonnarello","Cuisine":"Italian","Type":"Casual","Description":"Highly popular Trastevere restaurant famous for Roman pasta dishes.","Tags":["tourist-favorite","family-friendly","pasta","busy"],"EstimatedTotalPriceAllTripMembersUsd":80,"AveragePricePerAdultUsd":32,"AveragePricePerChildUsd":16,"PriceLevel":"$$","AverageMealDurationHours":1.5,"City":"Rome","District":"Trastevere","Latitude":41.8895,"Longitude":12.4684,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"23:30:00"}],"Rating":4.6,"ReviewCount":65000,"DietaryOptions":["vegetarian"],"PopularDishes":["Cacio e Pepe","Carbonara","Amatriciana"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-006","RestaurantName":"Osteria der Belli","Cuisine":"Italian","Type":"Casual","Description":"Sardinian-influenced trattoria in Trastevere known for seafood dishes.","Tags":["seafood","authentic","local","sardinian"],"EstimatedTotalPriceAllTripMembersUsd":104,"AveragePricePerAdultUsd":42,"AveragePricePerChildUsd":20,"PriceLevel":"$$$","AverageMealDurationHours":2,"City":"Rome","District":"Trastevere","Latitude":41.8885,"Longitude":12.4678,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"19:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"19:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"19:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"19:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Saturday","OpenTime":"19:00:00","CloseTime":"23:00:00"}],"Rating":4.6,"ReviewCount":2100,"DietaryOptions":["gluten-free"],"PopularDishes":["Seafood Pasta","Octopus","Bottarga"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-007","RestaurantName":"Nannarella","Cuisine":"Italian","Type":"Casual","Description":"Lively Trastevere restaurant serving Roman comfort food in generous portions.","Tags":["family-friendly","popular","traditional","pasta"],"EstimatedTotalPriceAllTripMembersUsd":75,"AveragePricePerAdultUsd":30,"AveragePricePerChildUsd":15,"PriceLevel":"$$","AverageMealDurationHours":1.5,"City":"Rome","District":"Trastevere","Latitude":41.8889,"Longitude":12.4681,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"23:30:00"}],"Rating":4.5,"ReviewCount":24000,"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Lasagna","Amatriciana"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-008","RestaurantName":"La Taverna dei Fori Imperiali","Cuisine":"Italian","Type":"Fine Dining","Description":"Refined Roman cuisine near the Colosseum with excellent service.","Tags":["romantic","historic-center","traditional","refined"],"EstimatedTotalPriceAllTripMembersUsd":124,"AveragePricePerAdultUsd":50,"AveragePricePerChildUsd":24,"PriceLevel":"$$$","AverageMealDurationHours":2,"City":"Rome","District":"Monti","Latitude":41.8929,"Longitude":12.4914,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:30:00","CloseTime":"23:00:00"}],"Rating":4.7,"ReviewCount":5200,"DietaryOptions":["vegetarian","gluten-free"],"PopularDishes":["Carbonara","Osso Buco","Tiramisu"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-009","RestaurantName":"Fatamorgana","Cuisine":"Dessert","Type":"Cafe","Description":"Artisanal gelateria famous for creative flavors and natural ingredients.","Tags":["gelato","dessert","family-friendly","quick-stop"],"EstimatedTotalPriceAllTripMembersUsd":21,"AveragePricePerAdultUsd":8,"AveragePricePerChildUsd":5,"PriceLevel":"$","AverageMealDurationHours":0.3,"City":"Rome","District":"Prati","Latitude":41.9084,"Longitude":12.4589,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"23:00:00"}],"Rating":4.7,"ReviewCount":3900,"DietaryOptions":["vegetarian","gluten-free"],"PopularDishes":["Pistachio Gelato","Mango Gelato","Chocolate Sorbet"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-010","RestaurantName":"Trattoria Monti","Cuisine":"Italian","Type":"Fine Dining","Description":"Beloved family-run restaurant blending Roman and Marche regional cuisine.","Tags":["local-favorite","gourmet","traditional","romantic"],"EstimatedTotalPriceAllTripMembersUsd":135,"AveragePricePerAdultUsd":55,"AveragePricePerChildUsd":25,"PriceLevel":"$$$","AverageMealDurationHours":2,"City":"Rome","District":"Monti","Latitude":41.8963,"Longitude":12.5008,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"12:30:00","CloseTime":"23:00:00"},{"DayOfWeek":"Saturday","OpenTime":"12:30:00","CloseTime":"23:00:00"}],"Rating":4.8,"ReviewCount":2800,"DietaryOptions":["vegetarian"],"PopularDishes":["Ravioli","Duck Ragu","Pollo alla Cacciatora"],"ReservationRecommended":true,"ReservationRequired":true},{"RestaurantId":"rome-rest-011","RestaurantName":"Mercato Centrale","Cuisine":"International","Type":"Food Hall","Description":"Large gourmet food market featuring numerous local and international vendors.","Tags":["food-market","family-friendly","casual","variety"],"EstimatedTotalPriceAllTripMembersUsd":62,"AveragePricePerAdultUsd":25,"AveragePricePerChildUsd":12,"PriceLevel":"$$","AverageMealDurationHours":1.25,"City":"Rome","District":"Esquilino","Latitude":41.9012,"Longitude":12.5018,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"08:00:00","CloseTime":"00:00:00"}],"Rating":4.5,"ReviewCount":17000,"DietaryOptions":["vegetarian","vegan","gluten-free"],"PopularDishes":["Pizza","Pasta","Gelato"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-012","RestaurantName":"Ristorante Coreano Hana","Cuisine":"Korean","Type":"Casual","Description":"Authentic Korean restaurant serving barbecue, bibimbap and traditional dishes.","Tags":["asian","korean","family-friendly","casual"],"EstimatedTotalPriceAllTripMembersUsd":79,"AveragePricePerAdultUsd":32,"AveragePricePerChildUsd":15,"PriceLevel":"$$","AverageMealDurationHours":1.75,"City":"Rome","District":"Esquilino","Latitude":41.8978,"Longitude":12.5031,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"22:30:00"}],"Rating":4.4,"ReviewCount":1400,"DietaryOptions":["vegetarian"],"PopularDishes":["Bibimbap","Bulgogi","Kimchi Fried Rice"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-013","RestaurantName":"Pizzarium","Cuisine":"Italian","Type":"Street Food","Description":"Famous pizza al taglio destination created by master pizzaiolo Gabriele Bonci.","Tags":["pizza","street-food","quick-bite","iconic"],"EstimatedTotalPriceAllTripMembersUsd":40,"AveragePricePerAdultUsd":16,"AveragePricePerChildUsd":8,"PriceLevel":"$","AverageMealDurationHours":0.75,"City":"Rome","District":"Prati","Latitude":41.9073,"Longitude":12.4465,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"22:00:00"}],"Rating":4.6,"ReviewCount":11000,"DietaryOptions":["vegetarian"],"PopularDishes":["Pizza al Taglio","Potato Pizza","Mortadella Pizza"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-014","RestaurantName":"La Zanzara","Cuisine":"Italian","Type":"Bistro","Description":"Modern all-day restaurant popular for brunch, cocktails and contemporary Italian dishes.","Tags":["brunch","modern","cocktails","stylish"],"EstimatedTotalPriceAllTripMembersUsd":94,"AveragePricePerAdultUsd":38,"AveragePricePerChildUsd":18,"PriceLevel":"$$$","AverageMealDurationHours":1.75,"City":"Rome","District":"Prati","Latitude":41.9087,"Longitude":12.4598,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"07:00:00","CloseTime":"01:00:00"}],"Rating":4.4,"ReviewCount":7300,"DietaryOptions":["vegetarian","vegan"],"PopularDishes":["Eggs Benedict","Carbonara","Tuna Tartare"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-015","RestaurantName":"Il Sorpasso","Cuisine":"Italian","Type":"Wine Bar","Description":"Popular Prati wine bar serving creative small plates and regional wines.","Tags":["wine","small-plates","local","evening"],"EstimatedTotalPriceAllTripMembersUsd":88,"AveragePricePerAdultUsd":36,"AveragePricePerChildUsd":16,"PriceLevel":"$$$","AverageMealDurationHours":1.75,"City":"Rome","District":"Prati","Latitude":41.908,"Longitude":12.4585,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"23:30:00"}],"Rating":4.6,"ReviewCount":3100,"DietaryOptions":["vegetarian"],"PopularDishes":["Charcuterie Board","Burrata","Wine Pairings"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-016","RestaurantName":"Apuleius","Cuisine":"Italian","Type":"Fine Dining","Description":"Elegant rooftop restaurant with panoramic city views and contemporary cuisine.","Tags":["rooftop","romantic","views","fine-dining"],"EstimatedTotalPriceAllTripMembersUsd":190,"AveragePricePerAdultUsd":80,"AveragePricePerChildUsd":30,"PriceLevel":"$$$$","AverageMealDurationHours":2.5,"City":"Rome","District":"Monti","Latitude":41.8968,"Longitude":12.4957,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"18:30:00","CloseTime":"23:00:00"}],"Rating":4.6,"ReviewCount":900,"DietaryOptions":["vegetarian","vegan","gluten-free"],"PopularDishes":["Tasting Menu","Sea Bass","Risotto"],"ReservationRecommended":true,"ReservationRequired":true},{"RestaurantId":"rome-rest-017","RestaurantName":"Panna \u0026 Co","Cuisine":"Dessert","Type":"Cafe","Description":"Specialty dessert shop known for artisanal tiramisu and sweet treats.","Tags":["dessert","tiramisu","cafe","quick-stop"],"EstimatedTotalPriceAllTripMembersUsd":23,"AveragePricePerAdultUsd":9,"AveragePricePerChildUsd":5,"PriceLevel":"$","AverageMealDurationHours":0.5,"City":"Rome","District":"Trastevere","Latitude":41.888,"Longitude":12.4687,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"10:00:00","CloseTime":"22:00:00"}],"Rating":4.7,"ReviewCount":2600,"DietaryOptions":["vegetarian"],"PopularDishes":["Tiramisu","Panna Cotta","Cannoli"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-018","RestaurantName":"Rosso","Cuisine":"Italian","Type":"Casual","Description":"Contemporary pizzeria and restaurant offering Roman classics and craft beers.","Tags":["pizza","casual","modern","groups"],"EstimatedTotalPriceAllTripMembersUsd":70,"AveragePricePerAdultUsd":28,"AveragePricePerChildUsd":14,"PriceLevel":"$$","AverageMealDurationHours":1.5,"City":"Rome","District":"San Lorenzo","Latitude":41.9005,"Longitude":12.5147,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"18:00:00","CloseTime":"00:00:00"}],"Rating":4.3,"ReviewCount":1900,"DietaryOptions":["vegetarian"],"PopularDishes":["Roman Pizza","Suppli","Craft Beer"],"ReservationRecommended":false,"ReservationRequired":false},{"RestaurantId":"rome-rest-019","RestaurantName":"Mamma Angela","Cuisine":"Italian","Type":"Casual","Description":"Welcoming family restaurant near Termini serving regional Italian cuisine.","Tags":["family-friendly","local","traditional","value"],"EstimatedTotalPriceAllTripMembersUsd":75,"AveragePricePerAdultUsd":30,"AveragePricePerChildUsd":15,"PriceLevel":"$$","AverageMealDurationHours":1.5,"City":"Rome","District":"Castro Pretorio","Latitude":41.9043,"Longitude":12.5038,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"23:00:00"}],"Rating":4.5,"ReviewCount":6200,"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Lasagna","Tiramisu"],"ReservationRecommended":true,"ReservationRequired":false},{"RestaurantId":"rome-rest-020","RestaurantName":"Pinsere","Cuisine":"Italian","Type":"Street Food","Description":"Popular takeaway spot specializing in high-quality Roman pinsa.","Tags":["pinsa","quick-bite","street-food","budget-friendly"],"EstimatedTotalPriceAllTripMembersUsd":35,"AveragePricePerAdultUsd":14,"AveragePricePerChildUsd":7,"PriceLevel":"$","AverageMealDurationHours":0.75,"City":"Rome","District":"Sallustiano","Latitude":41.906,"Longitude":12.4959,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"22:00:00"}],"Rating":4.7,"ReviewCount":8500,"DietaryOptions":["vegetarian"],"PopularDishes":["Margherita Pinsa","Prosciutto Pinsa","Vegetarian Pinsa"],"ReservationRecommended":false,"ReservationRequired":false}]}

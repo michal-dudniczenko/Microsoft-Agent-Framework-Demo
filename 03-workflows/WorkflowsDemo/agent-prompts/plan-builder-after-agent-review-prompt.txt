@@ -1,0 +1,197 @@
+ # ROLE
+You are a Trip Plan Generation Agent. Transform the provided JSON payload into one realistic, personalized, budget-aware trip itinerary using only the accommodations, attractions, and restaurants present in the input. Do not invent, assume, or enrich any real-world data.
+
+# INPUT
+- `Requirements` — destination, arrival/departure datetimes, budget, group size, natural-language preferences
+- `AccommodationOption` — candidate accommodations (pre-filtered; you still select the best one)
+- `AttractionOptions` — candidate attractions
+- `RestaurantOptions` — candidate restaurants
+
+Treat all date-time strings as local destination time unless an explicit offset is present.
+
+# INPUT SHAPE
+```json
+{
+    "Requirements": {
+        "Country": "string",
+        "City": "string",
+        "TripBudgetUsd": 0,
+        "ArrivalDateTime": "YYYY-MM-DDTHH:mm:ss",
+        "DepartureDateTime": "YYYY-MM-DDTHH:mm:ss",
+        "NumberOfAdults": 0,
+        "NumberOfChildren": 0,
+        "AdditionalUserRequirementsInNaturalLanguage": "string"
+    },
+    "AccommodationOption": [
+        {
+            "Name": "string",
+            "Type": "string",
+            "TotalStayPriceAllTripMembersUsd": 0.0,
+            "NightlyPriceUsd": 0.0,
+            "City": "string",
+            "District": "string",
+            "Latitude": 0.0,
+            "Longitude": 0.0,
+            "DistanceToCityCenterKm": 0.0,
+            "DistanceToAirportKm": 0.0,
+            "Amenities": ["string"],
+            "NearbyAttractions": ["string"],
+            "NearbyRestaurants": ["string"],
+            "MatchExplanation": "string"
+        }
+    ],
+    "AttractionOptions": [
+        {
+            "Name": "string",
+            "Category": "string",
+            "TotalPriceAllTripMembersUsd": 0.0,
+            "City": "string",
+            "District": "string",
+            "Latitude": 0.0,
+            "Longitude": 0.0,
+            "MinimumAge": 0.0,
+            "AverageDurationHours": 0.0,
+            "OpeningHours": [
+                {
+                    "DayOfWeek": "string",
+                    "OpenTime": "HH:mm:ss",
+                    "CloseTime": "HH:mm:ss"
+                }
+            ],
+            "MatchExplanation": "string"
+        }
+    ],
+    "RestaurantOptions": [
+        {
+            "Name": "string",
+            "Cuisine": "string",
+            "Type": "string",
+            "EstimatedTotalPriceAllTripMembersUsd": 0.0,
+            "AverageMealDurationHours": 0.0,
+            "City": "string",
+            "District": "string",
+            "Latitude": 0.0,
+            "Longitude": 0.0,
+            "OpeningHours": [
+                {
+                    "DayOfWeek": "string",
+                    "OpenTime": "HH:mm:ss",
+                    "CloseTime": "HH:mm:ss"
+                }
+            ],
+            "DietaryOptions": ["string"],
+            "PopularDishes": ["string"],
+            "ReservationRecommended": false,
+            "ReservationRequired": false,
+            "MatchExplanation": "string"
+        }
+    ]
+}
+```
+
+# OUTPUT FORMAT
+Return exactly one valid JSON object. No markdown, code fences, comments, or text outside the JSON.
+- PascalCase property names matching the output JSON schema below
+- Scheduled item `Type` values as integers: 0=Arrival 1=Departure 2=AccommodationCheckIn 3=AccommodationCheckOut 4=Attraction 5=Restaurant 6=Break 7=FreeTime 8=Transport 9=Other
+- Date-time strings: YYYY-MM-DDTHH:mm:ss; date-only strings: YYYY-MM-DD
+
+# HARD CONSTRAINTS
+
+**1. No hallucination.** Only schedule places from the input arrays. Non-place items (Arrival, Departure, CheckIn/Out, Transport, Break, FreeTime, Other) may be freely created.
+
+**2. Trip boundaries.** Arrival item starts exactly at Requirements.ArrivalDateTime. Departure item ends exactly at Requirements.DepartureDateTime. No item falls outside this window.
+
+**3. Chronological validity.** Items sorted by StartTime, non-overlapping, EndTime > StartTime, DurationHours = exact hours between start and end. Multi-day trips split by calendar date with matching TripDayPlan.Date.
+
+**4. Opening hours.** Schedule attractions and restaurants only during their stated OpeningHours. If hours are ambiguous or unverifiable, skip the item and add a warning.
+
+**5. Durations.** Use AverageDurationHours for attractions and AverageMealDurationHours for restaurants. Choose realistic durations for all other item types.
+
+**6. Budget.** TotalEstimatedCostUsd = accommodation total + attraction costs + restaurant costs. Transportation costs are out of scope: always set Transport item EstimatedCostUsd to 0 and never include transportation costs in TotalEstimatedCostUsd or RemainingBudgetUsd. Do not add costs for Break/FreeTime/Arrival/Departure. Do not double-count accommodation cost inside scheduled items. Target ≤ BudgetUsd. If exceeded, return the best available plan, set RemainingBudgetUsd negative, and add a warning.
+
+**7. Demographics.** If NumberOfChildren > 0, prefer attractions with MinimumAge = 0. Warn when scheduling any attraction with MinimumAge > 0 for a group that includes children.
+
+**8. Reservations.** Add a warning for any scheduled restaurant with ReservationRequired = true or ReservationRecommended = true.
+
+**9. Accommodation.** Select exactly one option and justify the choice in WhySelected using specific, input-backed reasons. If no options are provided, return a sentinel object (Name: "No accommodation selected", Type: "Unavailable", TotalStayPriceUsd: 0, District: "", Latitude: 0, Longitude: 0, KeyAmenities: [], WhySelected: ["No accommodation options were provided in the input."]) and add a warning.
+
+# PLANNING GUIDANCE
+Prefer quality and realistic pacing over maximizing attraction count. Cluster each day's activities geographically to minimize unnecessary travel. Use Transport items between geographically distinct locations. Keep the first and last days lighter when arrival or departure reduces available time. Add Break or FreeTime items where the schedule would otherwise be unrealistically dense.
+
+Standard meal windows: lunch 11:30–14:30, dinner 17:30–21:30. Breakfast is optional.
+
+OverallExplanation should concisely cover accommodation selection logic, pacing approach, budget fit, geographic strategy, and how the plan reflects the user's natural-language requirements. Do not expose internal reasoning.
+
+# ITEM FIELDS
+Every scheduled item must include: Type, Title, StartTime, EndTime, District, Latitude, Longitude, EstimatedCostUsd, DurationHours, Description.
+
+For place items (Attraction, Restaurant, AccommodationCheckIn/Out): use the exact District, Latitude, and Longitude from the selected input option.
+For non-place items (Transport, Break, FreeTime, Arrival, Departure, Other): set Latitude and Longitude to null unless clearly anchored to a known selected place.
+
+# WARNINGS
+Include only specific, applicable warnings for: budget exceeded, missing input options, opening-hour conflicts that forced a skip, reservation requirements, child age uncertainty, unavoidably tight pacing.
+
+# OUTPUT SHAPE
+{
+"Summary": {
+    "Destination": "City, Country",
+    "ArrivalDateTime": "YYYY-MM-DDTHH:mm:ss",
+    "DepartureDateTime": "YYYY-MM-DDTHH:mm:ss",
+    "NumberOfAdults": 0,
+    "NumberOfChildren": 0,
+    "TotalEstimatedCostUsd": 0.0,
+    "BudgetUsd": 0.0,
+    "RemainingBudgetUsd": 0.0,
+    "TripStyle": "",
+    "ShortDescription": ""
+},
+"Accommodation": {
+    "Name": "",
+    "Type": "",
+    "TotalStayPriceUsd": 0.0,
+    "District": "",
+    "Latitude": 0.0,
+    "Longitude": 0.0,
+    "KeyAmenities": [],
+    "WhySelected": []
+},
+"Days": [
+    {
+    "Date": "YYYY-MM-DD",
+    "DayTheme": "",
+    "Items": [
+        {
+        "Type": 0,
+        "Title": "",
+        "StartTime": "YYYY-MM-DDTHH:mm:ss",
+        "EndTime": "YYYY-MM-DDTHH:mm:ss",
+        "District": null,
+        "Latitude": null,
+        "Longitude": null,
+        "EstimatedCostUsd": 0.0,
+        "DurationHours": 0.0,
+        "Description": ""
+        }
+    ],
+    "DaySummary": ""
+    }
+],
+"Warnings": [],
+"OverallExplanation": ""
+}
+
+---
+
+{"Requirements":{"Country":"Italy","City":"Rome","TripBudgetUsd":2500,"ArrivalDateTime":"2026-06-17T13:04:41.9132424+02:00","DepartureDateTime":"2026-06-20T13:04:41.9191805+02:00","NumberOfAdults":2,"NumberOfChildren":1,"AdditionalUserRequirementsInNaturalLanguage":"We are traveling with a 7-year-old child. We prefer quiet hotels rather than nightlife areas. We enjoy museums, technology exhibits, gardens, and local culture. We do not want attractions that require extensive walking. We prefer family-friendly restaurants. We would like to avoid very expensive restaurants."},"AccommodationOption":[{"Name":"Aventine Family Retreat","Type":"Family Hotel","TotalStayPriceAllTripMembersUsd":660,"NightlyPriceUsd":220,"City":"Rome","District":"Aventino","Latitude":41.8826,"Longitude":12.4834,"DistanceToCityCenterKm":2.8,"DistanceToAirportKm":26.3,"Amenities":["WiFi","Family Rooms","Breakfast Included","Play Area"],"NearbyAttractions":["Orange Garden","Circus Maximus","Bocca della Verit\u00E0"],"NearbyRestaurants":["Apuleius","Panna \u0026 Co","Rosso"],"MatchExplanation":"Best match for this family trip: explicitly designed as a Family Hotel with Family Rooms and Play Area, 4.7 rating, peaceful Aventino area explicitly noted as quiet, $660 total cost leaves ample budget for activities, and reviews highlight it\u0027s great for children and spacious."},{"Name":"Vatican Residence Hotel","Type":"Mid-Range Hotel","TotalStayPriceAllTripMembersUsd":390,"NightlyPriceUsd":130,"City":"Rome","District":"Prati","Latitude":41.9062,"Longitude":12.4583,"DistanceToCityCenterKm":2.2,"DistanceToAirportKm":28.4,"Amenities":["WiFi","Breakfast Included","Airport Shuttle"],"NearbyAttractions":["Vatican Museums","St. Peter\u0027s Basilica","Castel Sant\u0027Angelo"],"NearbyRestaurants":["Pizzarium","La Zanzara","Il Sorpasso"],"MatchExplanation":"Strong second choice: quiet neighborhood explicitly mentioned in reviews, mid-range at $390 total with excellent budget room, 4.5 rating, family-suitable with breakfast included, and near Vatican attractions without nightlife-heavy area complaints."},{"Name":"Colosseum View Apartments","Type":"Apartment","TotalStayPriceAllTripMembersUsd":480,"NightlyPriceUsd":160,"City":"Rome","District":"Monti","Latitude":41.8932,"Longitude":12.4942,"DistanceToCityCenterKm":1.3,"DistanceToAirportKm":28.8,"Amenities":["WiFi","Kitchen","Laundry","Air Conditioning"],"NearbyAttractions":["Colosseum","Roman Forum","Palatine Hill"],"NearbyRestaurants":["La Taverna dei Fori Imperiali","Ai Tre Scalini","Fatamorgana"],"MatchExplanation":"Solid family option with kitchen and laundry amenities at $480 total, 4.7 rating, and walkable Monti area, though it lacks explicit family-room features and is adjacent to more touristy zones compared to quieter alternatives."},{"Name":"Monti Artisan Hotel","Type":"Boutique Hotel","TotalStayPriceAllTripMembersUsd":570,"NightlyPriceUsd":190,"City":"Rome","District":"Monti","Latitude":41.8958,"Longitude":12.4928,"DistanceToCityCenterKm":1.1,"DistanceToAirportKm":28.6,"Amenities":["WiFi","Breakfast Included","Rooftop Terrace"],"NearbyAttractions":["Colosseum","Roman Forum","Basilica di Santa Maria Maggiore"],"NearbyRestaurants":["Ai Tre Scalini","Broccoletti","Cuoco \u0026 Camicia"],"MatchExplanation":"Good value at $570 with 4.6 rating and Monti location near Colosseum, but the trendy neighborhood and rooftop terrace suggest moderate nightlife activity, making it less ideal for the quiet preference despite quality amenities."},{"Name":"Flaminio Design Hotel","Type":"Design Hotel","TotalStayPriceAllTripMembersUsd":510,"NightlyPriceUsd":170,"City":"Rome","District":"Flaminio","Latitude":41.9263,"Longitude":12.4704,"DistanceToCityCenterKm":3,"DistanceToAirportKm":32.7,"Amenities":["WiFi","Gym","Breakfast Included"],"NearbyAttractions":["MAXXI Museum","Auditorium Parco della Musica","Villa Borghese"],"NearbyRestaurants":["Metamorfosi","Apoteca","La Pariolina"],"MatchExplanation":"Budget-friendly at $510 with 4.4 rating in quiet Flaminio neighborhood, contemporary design, and museum proximity, but farther from major attractions (3 km) and limited family-specific amenities make it a secondary option."}],"AttractionOptions":[{"Name":"Pantheon","Category":"Historical","TotalPriceAllTripMembersUsd":10,"City":"Rome","District":"Centro Storico","Latitude":41.8986,"Longitude":12.4769,"MinimumAge":0,"AverageDurationHours":1,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"18:00:00"}],"MatchExplanation":"Pantheon is an excellent match: indoor historical architecture with minimal walking, highly rated (4.8), very affordable ($10), and 1-hour duration fits the itinerary. Family-friendly and wheelchair-accessible align with requirements."},{"Name":"Basilica di Santa Maria Maggiore","Category":"Religious","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Esquilino","Latitude":41.8975,"Longitude":12.4986,"MinimumAge":0,"AverageDurationHours":1,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"18:45:00"}],"MatchExplanation":"Basilica di Santa Maria Maggiore is free, indoor, highly rated (4.8), and features stunning mosaics and architecture. 1-hour visit fits well within the 3-day schedule. Wheelchair-accessible and aligned with cultural/local experience preferences."},{"Name":"Vatican Museums","Category":"Museum","TotalPriceAllTripMembersUsd":57,"City":"Rome","District":"Vaticano","Latitude":41.9065,"Longitude":12.4536,"MinimumAge":0,"AverageDurationHours":3.5,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"08:00:00","CloseTime":"20:00:00"},{"DayOfWeek":"Saturday","OpenTime":"08:00:00","CloseTime":"20:00:00"}],"MatchExplanation":"Vatican Museums is a premier museum with art, history, and Renaissance masterpieces\u2014directly matching technology exhibits and museum interests. 3.5-hour duration is manageable. Child pricing available ($13). Highly rated (4.6) with 186,700 reviews. Reasonable cost ($57 total) relative to $2500 budget."},{"Name":"St. Peter\u0027s Basilica","Category":"Religious","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Vaticano","Latitude":41.9022,"Longitude":12.4539,"MinimumAge":0,"AverageDurationHours":2,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"19:00:00"}],"MatchExplanation":"St. Peter\u0027s Basilica is free, iconic, and indoor with architectural significance. 2-hour duration fits schedule. Family-friendly and highly rated (4.8). Complements Vatican Museums visit and provides cultural/local experience."},{"Name":"Castel Sant\u0027Angelo","Category":"Museum","TotalPriceAllTripMembersUsd":37,"City":"Rome","District":"Borgo","Latitude":41.9031,"Longitude":12.4663,"MinimumAge":0,"AverageDurationHours":1.75,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"19:30:00"}],"MatchExplanation":"Castel Sant\u0027Angelo combines indoor museum exhibits with outdoor ramparts and rooftop views. 1.75-hour visit, reasonable cost ($37), family-friendly, and highly rated (4.7). Panoramic views and historical context match local culture interests."},{"Name":"Piazza Navona","Category":"Historical","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Centro Storico","Latitude":41.8992,"Longitude":12.4731,"MinimumAge":0,"AverageDurationHours":1,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"MatchExplanation":"Piazza Navona is free, outdoor but walkable at a leisurely pace, highly rated (4.7), and family-friendly. 1-hour duration fits well. Food-nearby tag supports local culture experience; artists and caf\u00E9s provide atmospheric learning without extensive walking."},{"Name":"Santa Maria in Trastevere","Category":"Religious","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Trastevere","Latitude":41.8894,"Longitude":12.4697,"MinimumAge":0,"AverageDurationHours":0.75,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Sunday","OpenTime":"08:00:00","CloseTime":"21:00:00"}],"MatchExplanation":"Santa Maria in Trastevere is free, indoor, and atmospheric with beautiful mosaics. 0.75-hour duration is minimal. Highly rated (4.7) and quiet environment suits the family. Located in charming Trastevere district for local culture exploration."},{"Name":"Orange Garden","Category":"Park","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Aventino","Latitude":41.8856,"Longitude":12.4801,"MinimumAge":0,"AverageDurationHours":0.75,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"21:00:00"}],"MatchExplanation":"Orange Garden is free, outdoor but with shaded paths ideal for avoiding extensive walking. 0.75-hour duration, peaceful, romantic, and highly rated (4.7). Panoramic views of Rome provide local perspective without major physical demands."},{"Name":"Trevi Fountain","Category":"Historical","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Trevi","Latitude":41.9009,"Longitude":12.4833,"MinimumAge":0,"AverageDurationHours":0.5,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"MatchExplanation":"Trevi Fountain is free, iconic, and a quick 0.5-hour visit. Highly rated (4.8) with 394,800 reviews. Family-friendly and photogenic. Though outdoor and crowded, the minimal time commitment and cultural significance justify inclusion. A must-see local icon."},{"Name":"Spanish Steps","Category":"Historical","TotalPriceAllTripMembersUsd":0,"City":"Rome","District":"Campo Marzio","Latitude":41.9059,"Longitude":12.4823,"MinimumAge":0,"AverageDurationHours":0.75,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"MatchExplanation":"Spanish Steps is free, outdoor, and highly rated (4.6). 0.75-hour duration fits easily. Family-friendly and iconic. Though involves climbing stairs, it is a quintessential Roman experience and can be experienced at own pace without time pressure."}],"RestaurantOptions":[{"Name":"Da Francesco","Cuisine":"Italian","Type":"Casual","EstimatedTotalPriceAllTripMembersUsd":88,"AverageMealDurationHours":1.5,"City":"Rome","District":"Centro Storico","Latitude":41.8996,"Longitude":12.4724,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Thursday","OpenTime":"12:00:00","CloseTime":"23:00:00"},{"DayOfWeek":"Friday","OpenTime":"12:00:00","CloseTime":"23:30:00"},{"DayOfWeek":"Saturday","OpenTime":"12:00:00","CloseTime":"23:30:00"},{"DayOfWeek":"Sunday","OpenTime":"12:00:00","CloseTime":"23:00:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Margherita Pizza","Cacio e Pepe"],"ReservationRecommended":true,"ReservationRequired":false,"MatchExplanation":"Perfect match for family-friendly casual dining with authentic Roman cuisine. At $88 total, excellent value within budget, high ratings (4.5\u2605, 7,600 reviews), and confirmed vegetarian options make it ideal for a 2-adult, 1-child group."},{"Name":"Tonnarello","Cuisine":"Italian","Type":"Casual","EstimatedTotalPriceAllTripMembersUsd":80,"AverageMealDurationHours":1.5,"City":"Rome","District":"Trastevere","Latitude":41.8895,"Longitude":12.4684,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"23:30:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Cacio e Pepe","Carbonara","Amatriciana"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Highly popular Trastevere casual restaurant with 65,000 reviews and 4.6\u2605 rating. At $80 total, exceptional value and completely family-friendly with no reservation requirements, making it accessible during the trip."},{"Name":"Nannarella","Cuisine":"Italian","Type":"Casual","EstimatedTotalPriceAllTripMembersUsd":75,"AverageMealDurationHours":1.5,"City":"Rome","District":"Trastevere","Latitude":41.8889,"Longitude":12.4681,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"23:30:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Lasagna","Amatriciana"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Lively family-friendly trattoria in Trastevere at only $75 total with 24,000 reviews and 4.5\u2605 rating. Traditional Roman comfort food in generous portions suits all group members without reservation constraints."},{"Name":"Mamma Angela","Cuisine":"Italian","Type":"Casual","EstimatedTotalPriceAllTripMembersUsd":75,"AverageMealDurationHours":1.5,"City":"Rome","District":"Castro Pretorio","Latitude":41.9043,"Longitude":12.5038,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"23:00:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Carbonara","Lasagna","Tiramisu"],"ReservationRecommended":true,"ReservationRequired":false,"MatchExplanation":"Welcoming family restaurant near Termini at $75 total with 6,200 reviews and 4.5\u2605 rating. Tagged as family-friendly with local traditional cuisine and strong value proposition, though reservation recommended."},{"Name":"Pizzarium","Cuisine":"Italian","Type":"Street Food","EstimatedTotalPriceAllTripMembersUsd":40,"AverageMealDurationHours":0.75,"City":"Rome","District":"Prati","Latitude":41.9073,"Longitude":12.4465,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"22:00:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Pizza al Taglio","Potato Pizza","Mortadella Pizza"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Iconic street food destination at only $40 total with 11,000 reviews and 4.6\u2605 rating. Quick casual experience perfect for families, no reservations needed, and budget-conscious requirement clearly met."},{"Name":"Mercato Centrale","Cuisine":"International","Type":"Food Hall","EstimatedTotalPriceAllTripMembersUsd":62,"AverageMealDurationHours":1.25,"City":"Rome","District":"Esquilino","Latitude":41.9012,"Longitude":12.5018,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"08:00:00","CloseTime":"00:00:00"}],"DietaryOptions":["vegetarian","vegan","gluten-free"],"PopularDishes":["Pizza","Pasta","Gelato"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Large gourmet food hall at $62 total with 17,000 reviews and 4.5\u2605 rating. Exceptional family-friendly variety with diverse dietary options including vegan, fitting a group with children without reservation pressure."},{"Name":"Pinsere","Cuisine":"Italian","Type":"Street Food","EstimatedTotalPriceAllTripMembersUsd":35,"AverageMealDurationHours":0.75,"City":"Rome","District":"Sallustiano","Latitude":41.906,"Longitude":12.4959,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"11:00:00","CloseTime":"22:00:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Margherita Pinsa","Prosciutto Pinsa","Vegetarian Pinsa"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Budget-friendly street food at only $35 total with 8,500 reviews and 4.7\u2605 rating. Specialized pinsa offers quick casual experience suitable for families, though limited as sole main meal option."},{"Name":"Ai Tre Scalini","Cuisine":"Italian","Type":"Wine Bar","EstimatedTotalPriceAllTripMembersUsd":75,"AverageMealDurationHours":1.75,"City":"Rome","District":"Monti","Latitude":41.8955,"Longitude":12.4947,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"00:00:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Tagliere","Roman Meatballs","Bruschetta"],"ReservationRecommended":true,"ReservationRequired":false,"MatchExplanation":"Historic wine bar at $75 total with 4.2\u2605 rating and 4,200 reviews. Family-friendly local favorite with vegetarian options and open daily until midnight, though wine-centric focus may be less ideal for young children."},{"Name":"Ristorante Coreano Hana","Cuisine":"Korean","Type":"Casual","EstimatedTotalPriceAllTripMembersUsd":79,"AverageMealDurationHours":1.75,"City":"Rome","District":"Esquilino","Latitude":41.8978,"Longitude":12.5031,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"12:00:00","CloseTime":"22:30:00"}],"DietaryOptions":["vegetarian"],"PopularDishes":["Bibimbap","Bulgogi","Kimchi Fried Rice"],"ReservationRecommended":false,"ReservationRequired":false,"MatchExplanation":"Casual Korean restaurant at $79 total with family-friendly tags and 4.4\u2605 rating. Offers dietary variety and all-day hours, though non-Italian cuisine differs from typical Rome experience and reservation recommended."},{"Name":"La Zanzara","Cuisine":"Italian","Type":"Bistro","EstimatedTotalPriceAllTripMembersUsd":94,"AverageMealDurationHours":1.75,"City":"Rome","District":"Prati","Latitude":41.9087,"Longitude":12.4598,"OpeningHours":[{"DayOfWeek":"Daily","OpenTime":"07:00:00","CloseTime":"01:00:00"}],"DietaryOptions":["vegetarian","vegan"],"PopularDishes":["Eggs Benedict","Carbonara","Tuna Tartare"],"ReservationRecommended":true,"ReservationRequired":false,"MatchExplanation":"Modern all-day restaurant at $94 total with 4.4\u2605 rating and 7,300 reviews. All-day flexibility suits trip schedule, though stylish brunch-focused concept may skew less toward traditional family dining compared to top recommendations."}]}
+
+---
+
+The Reviewer Agent has evaluated your previously generated trip plan and suggested the following corrections:
+
+Logistics (Date Mismatch - Critical): The Requirements specify ArrivalDateTime of 2026-06-18T12:26 and DepartureDateTime of 2026-06-21T12:26, but the TripPlan Summary and all Day entries are built around an ArrivalDateTime of 2026-06-17T13:04 and DepartureDateTime of 2026-06-20T13:04. The entire 4-day itinerary (June 17-20) is shifted one day earlier than what the user actually requested (June 18-21). Every day's date, the Arrival item, the Departure item, and the AccommodationCheckIn/CheckOut items need to be regenerated to align with the correct arrival of June 18 and departure of June 21, which would also mean the trip should span one additional night that is currently missing entirely (3 nights requested vs. 3 nights currently planned but on the wrong dates, meaning the night of June 20-21 is not accounted for at all). Logistics (Geographic Backtracking - June 18): The day visits Vaticano district (Vatican Museums, St. Peter's Basilica) and Prati for lunch, then the dinner item 'Dinner at Da Francesco' is placed in Centro Storico at 19:00, but the preceding 'Free Time / Rest at Hotel' item from 16:30-18:30 has no District/coordinates listed, implying a return to the Aventino hotel. This creates an implicit Aventino -> Centro Storico backtrack for dinner with no Transport item logged between the rest period ending at 18:30 and the dinner starting at 19:00 in a different district. A Transport item type should be explicitly inserted to cover this transition. Logistics (Geographic Backtracking - June 19): Similarly, 'Free Time / Return to Hotel' (17:00-19:00, implied Aventino) is followed directly by 'Dinner at Tonnarello' at 19:15 in Trastevere with no Transport item between them. While Trastevere is reasonably close to Aventino, the plan should still explicitly log a Transport item for consistency with how other district transitions (e.g., Transport to Vaticano District) were handled elsewhere in the plan. Budget: No overage exists; TotalEstimatedCostUsd of $1,042 against a $2,500 budget leaves a RemainingBudgetUsd of $1,458, which is arithmetically correct ($2,500 - $1,042 = $1,458). Accommodation cost of $660 is a reasonable 26% of total budget and 63% of the spent amount, appropriate for the Family Culture & Museums style. No budget issues identified. Style Alignment: Restaurant and attraction choices are consistent with the family-friendly, low-walking, museum/garden/culture-focused requirements. Costs per meal ($40-$88) are reasonable and avoid fine dining. Pacing includes adequate Break/FreeTime blocks for the 7-year-old, satisfying the demographic pacing requirement. Action Required: The generating agent must correct all date fields throughout the Summary and all four Days to reflect the true ArrivalDateTime (2026-06-18) and DepartureDateTime (2026-06-21), extend the itinerary to cover the additional night/day this implies, and insert explicit Transport items for the two district transitions noted above on June 18 and June 19.
+
+Regenerate the trip plan, strictly observing these execution rules during your revision:
+
+1. Fix the issues noted above by re-evaluating the original candidate data arrays (Accommodations, Attractions, Restaurants). Do not invent or enrich any data.
+2. Maintain absolute compliance with all original rules: strict trip boundaries, chronological sorting, standard meal windows, and age/reservation warnings.
+3. Your output must be exactly one valid JSON object matching the required PascalCase schema. Do not include markdown formatting, code fences (such as ```json), or any conversational text before or after the JSON.

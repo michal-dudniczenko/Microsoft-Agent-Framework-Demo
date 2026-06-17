@@ -1,0 +1,42 @@
+[
+  {
+    "RestaurantId": "rome-rest-001",
+    "RankReasoning": "Perfect match for family-friendly casual dining with authentic Roman cuisine. At $88 total, excellent value within budget, high ratings (4.5★, 7,600 reviews), and confirmed vegetarian options make it ideal for a 2-adult, 1-child group."
+  },
+  {
+    "RestaurantId": "rome-rest-005",
+    "RankReasoning": "Highly popular Trastevere casual restaurant with 65,000 reviews and 4.6★ rating. At $80 total, exceptional value and completely family-friendly with no reservation requirements, making it accessible during the trip."
+  },
+  {
+    "RestaurantId": "rome-rest-007",
+    "RankReasoning": "Lively family-friendly trattoria in Trastevere at only $75 total with 24,000 reviews and 4.5★ rating. Traditional Roman comfort food in generous portions suits all group members without reservation constraints."
+  },
+  {
+    "RestaurantId": "rome-rest-019",
+    "RankReasoning": "Welcoming family restaurant near Termini at $75 total with 6,200 reviews and 4.5★ rating. Tagged as family-friendly with local traditional cuisine and strong value proposition, though reservation recommended."
+  },
+  {
+    "RestaurantId": "rome-rest-013",
+    "RankReasoning": "Iconic street food destination at only $40 total with 11,000 reviews and 4.6★ rating. Quick casual experience perfect for families, no reservations needed, and budget-conscious requirement clearly met."
+  },
+  {
+    "RestaurantId": "rome-rest-011",
+    "RankReasoning": "Large gourmet food hall at $62 total with 17,000 reviews and 4.5★ rating. Exceptional family-friendly variety with diverse dietary options including vegan, fitting a group with children without reservation pressure."
+  },
+  {
+    "RestaurantId": "rome-rest-020",
+    "RankReasoning": "Budget-friendly street food at only $35 total with 8,500 reviews and 4.7★ rating. Specialized pinsa offers quick casual experience suitable for families, though limited as sole main meal option."
+  },
+  {
+    "RestaurantId": "rome-rest-003",
+    "RankReasoning": "Historic wine bar at $75 total with 4.2★ rating and 4,200 reviews. Family-friendly local favorite with vegetarian options and open daily until midnight, though wine-centric focus may be less ideal for young children."
+  },
+  {
+    "RestaurantId": "rome-rest-012",
+    "RankReasoning": "Casual Korean restaurant at $79 total with family-friendly tags and 4.4★ rating. Offers dietary variety and all-day hours, though non-Italian cuisine differs from typical Rome experience and reservation recommended."
+  },
+  {
+    "RestaurantId": "rome-rest-014",
+    "RankReasoning": "Modern all-day restaurant at $94 total with 4.4★ rating and 7,300 reviews. All-day flexibility suits trip schedule, though stylish brunch-focused concept may skew less toward traditional family dining compared to top recommendations."
+  }
+]

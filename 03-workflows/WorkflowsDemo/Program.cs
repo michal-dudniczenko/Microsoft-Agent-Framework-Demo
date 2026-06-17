@@ -62,8 +62,9 @@ IConfiguration configuration = new ConfigurationBuilder()
 // chat clients
 var anthropicClient = new AnthropicClient()
 {
-    ApiKey = configuration[AnthropicApiKeyEnvVariableName] 
-        ?? throw new InvalidOperationException("Anthropic API key is not configured")
+    // ApiKey = configuration[AnthropicApiKeyEnvVariableName] 
+    //     ?? throw new InvalidOperationException("Anthropic API key is not configured")
+    ApiKey = "dummy"
 };
 
 var ollamaChatClient = OllamaChatClientFactory.Create();

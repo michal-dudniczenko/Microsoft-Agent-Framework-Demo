@@ -40,9 +40,14 @@ internal sealed partial class RequirementsProcessorExecutor(
 
         var prompt = JsonSerializer.Serialize(requirements);
 
-        var result = (await agent.RunAsync<ProcessedTripRequirements>(prompt, cancellationToken: cancellationToken))
-            .Result;
-        
+        // var result = (await agent.RunAsync<ProcessedTripRequirements>(prompt, cancellationToken: cancellationToken))
+        //     .Result;
+
+        var result = JsonSerializer.Deserialize<ProcessedTripRequirements>(
+            File.ReadAllText("agent-responses/requirements-processor-response.txt")
+        );
+        await Task.Delay(7000);
+
         result.SaveModelResponse(fileName: agent.Id);
 
         logger.LogInformation("Processed initial requirements and assessed trip feasibility");

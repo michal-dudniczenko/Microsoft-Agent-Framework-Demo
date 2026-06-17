@@ -46,10 +46,17 @@ internal sealed partial class RestaurantsResearcherExecutor(
         var prompt = JsonSerializer.Serialize(
             new RestaurantsResearcherPrompt(relevantRequirements, allRestaurantsOptions));
 
-        var result = (await agent.RunAsync<List<RestaurantsRankingItem>>(
-            prompt,
-            cancellationToken: cancellationToken)).Result;
-        
+        // File.WriteAllText("agent-prompts/restaurants-researcher-prompt.txt", prompt);
+
+        // var result = (await agent.RunAsync<List<RestaurantRankingItem>>(
+        //     prompt,
+        //     cancellationToken: cancellationToken)).Result;
+
+        var result = JsonSerializer.Deserialize<List<RestaurantsRankingItem>>(
+            File.ReadAllText("agent-responses/restaurants-researcher-response.txt")
+        );
+        await Task.Delay(9000);
+
         result.SaveModelResponse(fileName: agent.Id);
 
         var restaurantOptionsById = allRestaurantsOptions.ToDictionary(

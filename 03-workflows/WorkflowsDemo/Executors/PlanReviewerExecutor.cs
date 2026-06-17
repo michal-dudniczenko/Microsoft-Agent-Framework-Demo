@@ -29,10 +29,17 @@ internal sealed partial class PlanReviewerExecutor(
         var prompt = JsonSerializer.Serialize(
             new PlanReviewerPrompt(Requirements: requirements, TripPlan: planBuilderResult.TripPlan));
 
-        var result = (await agent.RunAsync<PlanReviewerFeedback>(
-            prompt,
-            cancellationToken: cancellationToken)).Result;
-        
+        // File.WriteAllText("agent-prompts/plan-reviewer-prompt.txt", prompt);
+
+        // var result = (await agent.RunAsync<PlanReviewerFeedback>(
+        //     prompt,
+        //     cancellationToken: cancellationToken)).Result;
+
+        var result = JsonSerializer.Deserialize<PlanReviewerFeedback>(
+            File.ReadAllText("agent-responses/plan-reviewer-response.txt")
+        );
+        await Task.Delay(5000);
+
         result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
         logger.LogInformation("Reviewed itinerary, sending feedback back to the plan builder");

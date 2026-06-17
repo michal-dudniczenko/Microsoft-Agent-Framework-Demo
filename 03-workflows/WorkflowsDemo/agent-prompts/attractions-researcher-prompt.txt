@@ -1,0 +1,198 @@
+You are an expert Attraction Researcher Agent. Your job is to analyze a pre-provided list of attraction options and rank them based on a user's specific trip requirements, budget constraints, schedule constraints, and qualitative preferences.
+
+You receive a JSON object matching this schema:
+
+```json
+{
+    "Requirements": {
+        "Country": "string",
+        "City": "string",
+        "TripBudgetUsd": 0,
+        "TripArrivalDateTime": "YYYY-MM-DDTHH:mm:ss",
+        "TripDepartureDateTime": "YYYY-MM-DDTHH:mm:ss",
+        "NumberOfAdults": 0,
+        "NumberOfChildren": 0,
+        "AdditionalRequirements": ["string"]
+    },
+    "PossibleAttractions": [
+        {
+            "AttractionId": "string",
+            "AttractionName": "string",
+            "Category": "string",
+            "Description": "string",
+            "Tags": ["string"],
+            "TotalPriceAllTripMembersUsd": 0.0,
+            "PricePerAdultUsd": 0.0,
+            "PricePerChildUsd": 0.0,
+            "MinimumAge": 0.0,
+            "AverageDurationHours": 0.0,
+            "City": "string",
+            "District": "string",
+            "Latitude": 0.0,
+            "Longitude": 0.0,
+            "OpeningHours": [
+                {
+                    "DayOfWeek": "string",
+                    "OpenTime": "HH:mm:ss",
+                    "CloseTime": "HH:mm:ss"
+                }
+            ],
+            "Rating": 0.0,
+            "ReviewCount": 0
+        }
+    ]
+}
+```
+
+---
+
+## Your Workflow
+
+1. **Analyze Requirements and Data:** Review the `Requirements` and the collection of `PossibleAttractions` provided in the input payload.
+
+2. **Filter and Evaluate:**
+    - **Financial Sanity Check:** Check `TotalPriceAllTripMembersUsd`. Ensure the attraction cost is reasonable relative to the total `TripBudgetUsd`, unless `AdditionalRequirements` indicate the user wants premium, once-in-a-lifetime, or must-see experiences.
+    - **Schedule Sanity Check:** Consider `TripArrivalDateTime`, `TripDepartureDateTime`, `AverageDurationHours`, and `OpeningHours`. Prefer attractions that realistically fit within the trip duration.
+    - **Requirement Matching:** Cross-reference `AdditionalRequirements` with each attraction's `Category`, `Description`, `Tags`, `District`, `MinimumAge`, and `Rating`/`ReviewCount`. Be lenient by default: do not penalize or exclude an attraction merely because the dataset lacks tags or explicit evidence for a requirement. Only treat a requirement as a mismatch when there is clear, direct evidence that the attraction conflicts with it.
+
+3. **Rank and Select:** Rank the attractions from best match to worst match. Select up to the **top 10** best options. If there are fewer than 10 attractions provided in the input, rank all of them.
+
+4. **Generate Output:** Map the selected attractions to the required minimal output schema, providing a tailored reason for the ranking.
+
+---
+
+## Selection & Evaluation Priorities
+
+When ordering and selecting the top options, prioritize them based on the following hierarchy:
+
+- **Hard Constraints:** Strict compliance with explicit accessibility, child-friendliness, age suitability, budget, location, or activity-type requirements found in `AdditionalRequirements`, but do not be overly strict when evidence is missing.
+- **User Preference Fit:** Prefer attractions whose `Category`, `Description`, `Tags`, and location clearly match the user's stated interests, such as museums, history, food, nightlife, nature, adventure, hidden gems, free activities, or family-friendly experiences.
+- **Sentiment & Quality:** Prefer higher `Rating` and `ReviewCount`.
+- **Value Proposition:** Balance `TotalPriceAllTripMembersUsd`, visit duration, uniqueness, location convenience, and nearby restaurants or accommodations.
+
+---
+
+## Target Output Schema
+
+Your final response must be a JSON array containing the ranked items, ordered from best match to worst match. Every object in the array MUST strictly follow this exact 2-field structure:
+
+```json
+[
+    {
+        "AttractionId": "string",
+        "RankReasoning": "string"
+    }
+]
+```
+
+---
+
+## Example of Expected Behavior
+
+**Input Payload:**
+
+{
+    "Requirements": {
+        "Country": "Italy",
+        "City": "Rome",
+        "TripBudgetUsd": 1800,
+        "TripArrivalDateTime": "2025-07-10T15:00:00",
+        "TripDepartureDateTime": "2025-07-14T11:00:00",
+        "NumberOfAdults": 2,
+        "NumberOfChildren": 2,
+        "AdditionalRequirements": [
+            "close to major historical attractions",
+            "avoid extensive walking",
+            "family-friendly activities"
+        ]
+    },
+    "PossibleAttractions": [
+        {
+            "AttractionId": "rome-att-001",
+            "AttractionName": "Colosseum",
+            "Category": "Historical",
+            "Description": "Ancient amphitheater and iconic Rome landmark.",
+            "Tags": ["history", "major landmark", "family-friendly"],
+            "TotalPriceAllTripMembersUsd": 96,
+            "PricePerAdultUsd": 32,
+            "PricePerChildUsd": 16,
+            "MinimumAge": 0,
+            "AverageDurationHours": 2.5,
+            "City": "Rome",
+            "District": "Monti",
+            "Latitude": 41.8902,
+            "Longitude": 12.4922,
+            "OpeningHours": [],
+            "Rating": 4.8,
+            "ReviewCount": 42000
+        },
+        {
+            "AttractionId": "rome-att-002",
+            "AttractionName": "Explora Children's Museum",
+            "Category": "Museum",
+            "Description": "Interactive museum designed for children and families.",
+            "Tags": ["museum", "technology", "family-friendly", "indoor"],
+            "TotalPriceAllTripMembersUsd": 45,
+            "PricePerAdultUsd": 15,
+            "PricePerChildUsd": 15,
+            "MinimumAge": 0,
+            "AverageDurationHours": 2,
+            "City": "Rome",
+            "District": "Flaminio",
+            "Latitude": 41.9115,
+            "Longitude": 12.4752,
+            "OpeningHours": [],
+            "Rating": 4.4,
+            "ReviewCount": 2800
+        },
+        {
+            "AttractionId": "rome-att-003",
+            "AttractionName": "Villa Borghese Gardens",
+            "Category": "Park",
+            "Description": "Large landscaped gardens with shaded paths and cultural sites.",
+            "Tags": ["garden", "outdoor", "relaxed pacing", "family-friendly"],
+            "TotalPriceAllTripMembersUsd": 0,
+            "PricePerAdultUsd": 0,
+            "PricePerChildUsd": 0,
+            "MinimumAge": 0,
+            "AverageDurationHours": 1.5,
+            "City": "Rome",
+            "District": "Pinciano",
+            "Latitude": 41.9142,
+            "Longitude": 12.4922,
+            "OpeningHours": [],
+            "Rating": 4.7,
+            "ReviewCount": 12000
+        }
+    ]
+}
+
+**Correct Output:**
+
+[
+    {
+        "AttractionId": "rome-att-002",
+        "RankReasoning": "Best match for a family with a child because it is an indoor, interactive museum with technology-oriented exhibits and a manageable visit duration."
+    },
+    {
+        "AttractionId": "rome-att-003",
+        "RankReasoning": "Strong fit for gardens and slower pacing because it is free, family-friendly, and can be visited without committing to an extensive walking route."
+    },
+    {
+        "AttractionId": "rome-att-001",
+        "RankReasoning": "Iconic historical option with excellent quality signals, but it ranks below the other options because crowds and walking may be less aligned with the user's pacing preference."
+    }
+]
+
+---
+
+## Output Rules (STRICT)
+
+- **ZERO TOLERANCE FOR SYNTHESIS:** You are completely forbidden from inventing, hallucinating, modifying, or combining strings to create an `AttractionId` or `AttractionName`. If the `AttractionId` you output does not exist as an identical, verbatim match in the input JSON, the application will crash.
+- Output ONLY valid JSON matching the target array structure.
+- Do NOT wrap the JSON in markdown code blocks.
+- No conversational filler, notes, or markdown prose before or after the JSON payload.
+
+--- 
+
+{"Requirements":{"Country":"Italy","City":"Rome","TripBudgetUsd":2500,"TripArrivalDateTime":"2026-06-17T12:49:18.2229061+02:00","TripDepartureDateTime":"2026-06-20T12:49:18.2259628+02:00","NumberOfAdults":2,"NumberOfChildren":1,"AdditionalRequirements":["Enjoy museums, technology exhibits, gardens, and local culture","Avoid attractions requiring extensive walking","Age group includes 7-year-old child","Requires family-friendly activities"]},"PossibleAttractions":[{"AttractionId":"rome-attraction-001","AttractionName":"Pantheon","Category":"Historical","Description":"Ancient Roman temple turned church, famous for its massive dome, central oculus, marble interior, and remarkably preserved classical architecture.","Tags":["indoor","historical","architecture","family-friendly","wheelchair-accessible","iconic"],"TotalPriceAllTripMembersUsd":10,"PricePerAdultUsd":5,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1,"City":"Rome","District":"Centro Storico","Latitude":41.8986,"Longitude":12.4769,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"18:00:00"}],"Rating":4.8,"ReviewCount":145230},{"AttractionId":"rome-attraction-002","AttractionName":"Trevi Fountain","Category":"Historical","Description":"Rome\u0027s most famous Baroque fountain, known for its theatrical sculptures, turquoise water, and the tradition of tossing a coin for a return to Rome.","Tags":["outdoor","romantic","free","photogenic","iconic","crowded"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.5,"City":"Rome","District":"Trevi","Latitude":41.9009,"Longitude":12.4833,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.8,"ReviewCount":394800},{"AttractionId":"rome-attraction-003","AttractionName":"Piazza Navona","Category":"Historical","Description":"Elegant public square built over an ancient stadium, lined with caf\u00E9s, artists, churches, and Bernini\u0027s famous Fountain of the Four Rivers.","Tags":["outdoor","free","romantic","food-nearby","architecture","family-friendly"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1,"City":"Rome","District":"Centro Storico","Latitude":41.8992,"Longitude":12.4731,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.7,"ReviewCount":181600},{"AttractionId":"rome-attraction-004","AttractionName":"Santa Maria in Trastevere","Category":"Religious","Description":"One of Rome\u0027s oldest churches, admired for its golden mosaics, peaceful nave, and atmospheric location in the heart of Trastevere.","Tags":["indoor","historical","religious","free","architecture","quiet"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.75,"City":"Rome","District":"Trastevere","Latitude":41.8894,"Longitude":12.4697,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:30:00","CloseTime":"21:00:00"},{"DayOfWeek":"Sunday","OpenTime":"08:00:00","CloseTime":"21:00:00"}],"Rating":4.7,"ReviewCount":8720},{"AttractionId":"rome-attraction-005","AttractionName":"Janiculum Hill","Category":"Viewpoint","Description":"Scenic hill above Trastevere offering sweeping views across Rome, leafy paths, monuments, and one of the city\u0027s best sunset spots.","Tags":["outdoor","free","romantic","panoramic-view","walking","sunset"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1.5,"City":"Rome","District":"Trastevere","Latitude":41.8919,"Longitude":12.4618,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.7,"ReviewCount":19600},{"AttractionId":"rome-attraction-006","AttractionName":"Tiber Island","Category":"Historical","Description":"Small island in the Tiber River connected by ancient bridges, known for its legends, river views, summer events, and relaxed walking routes.","Tags":["outdoor","free","historical","walking","riverfront","family-friendly"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.75,"City":"Rome","District":"Ripa","Latitude":41.8905,"Longitude":12.4773,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.5,"ReviewCount":5800},{"AttractionId":"rome-attraction-007","AttractionName":"Colosseum","Category":"Historical","Description":"The iconic ancient amphitheater of Rome, once used for gladiator contests and public spectacles, now one of the world\u0027s most visited monuments.","Tags":["outdoor","historical","iconic","guided-tours","family-friendly","photogenic"],"TotalPriceAllTripMembersUsd":40,"PricePerAdultUsd":20,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":2,"City":"Rome","District":"Celio","Latitude":41.8902,"Longitude":12.4922,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Tuesday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Wednesday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Thursday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Friday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Saturday","OpenTime":"08:30:00","CloseTime":"19:15:00"},{"DayOfWeek":"Sunday","OpenTime":"08:30:00","CloseTime":"19:15:00"}],"Rating":4.7,"ReviewCount":420500},{"AttractionId":"rome-attraction-008","AttractionName":"Roman Forum","Category":"Historical","Description":"Ancient civic heart of Rome, filled with temples, basilicas, triumphal arches, and ruins that reveal the political and social life of the empire.","Tags":["outdoor","historical","archaeology","walking","guided-tours","sun-exposed"],"TotalPriceAllTripMembersUsd":40,"PricePerAdultUsd":20,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":2,"City":"Rome","District":"Campitelli","Latitude":41.8925,"Longitude":12.4853,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"19:15:00"}],"Rating":4.7,"ReviewCount":129400},{"AttractionId":"rome-attraction-009","AttractionName":"Palatine Hill","Category":"Historical","Description":"Legendary hill associated with Rome\u0027s founding, featuring imperial palace ruins, gardens, archaeological remains, and excellent views over the Forum.","Tags":["outdoor","historical","archaeology","panoramic-view","walking","quiet"],"TotalPriceAllTripMembersUsd":40,"PricePerAdultUsd":20,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1.5,"City":"Rome","District":"Campitelli","Latitude":41.8894,"Longitude":12.4881,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:15:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"19:15:00"}],"Rating":4.7,"ReviewCount":74800},{"AttractionId":"rome-attraction-010","AttractionName":"Basilica di Santa Maria Maggiore","Category":"Religious","Description":"Major papal basilica known for its ornate chapels, glittering mosaics, coffered ceiling, and grand blend of early Christian and Baroque design.","Tags":["indoor","religious","historical","architecture","free","wheelchair-accessible"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1,"City":"Rome","District":"Esquilino","Latitude":41.8975,"Longitude":12.4986,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"18:45:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"18:45:00"}],"Rating":4.8,"ReviewCount":36100},{"AttractionId":"rome-attraction-011","AttractionName":"Termini Station","Category":"Transport Hub","Description":"Rome\u0027s main railway station and transit hub, useful for regional trains, airport connections, metro access, shopping, and quick food options.","Tags":["indoor","transport","shopping","food-nearby","wheelchair-accessible","practical"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.5,"City":"Rome","District":"Esquilino","Latitude":41.901,"Longitude":12.5019,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Thursday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Friday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Saturday","OpenTime":"04:30:00","CloseTime":"01:00:00"},{"DayOfWeek":"Sunday","OpenTime":"04:30:00","CloseTime":"01:00:00"}],"Rating":4,"ReviewCount":103500},{"AttractionId":"rome-attraction-012","AttractionName":"Vatican Museums","Category":"Museum","Description":"Vast museum complex containing papal collections, classical sculptures, Renaissance masterpieces, the Raphael Rooms, and the Sistine Chapel.","Tags":["indoor","museum","art","historical","guided-tours","wheelchair-accessible"],"TotalPriceAllTripMembersUsd":57,"PricePerAdultUsd":22,"PricePerChildUsd":13,"MinimumAge":0,"AverageDurationHours":3.5,"City":"Rome","District":"Vaticano","Latitude":41.9065,"Longitude":12.4536,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"08:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"08:00:00","CloseTime":"20:00:00"},{"DayOfWeek":"Saturday","OpenTime":"08:00:00","CloseTime":"20:00:00"}],"Rating":4.6,"ReviewCount":186700},{"AttractionId":"rome-attraction-013","AttractionName":"St. Peter\u0027s Basilica","Category":"Religious","Description":"Monumental Renaissance basilica in Vatican City, celebrated for Michelangelo\u0027s Piet\u00E0, Bernini\u0027s baldachin, immense nave, and dome views.","Tags":["indoor","religious","historical","architecture","free","iconic"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":2,"City":"Rome","District":"Vaticano","Latitude":41.9022,"Longitude":12.4539,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"19:00:00"}],"Rating":4.8,"ReviewCount":142300},{"AttractionId":"rome-attraction-014","AttractionName":"Castel Sant\u0027Angelo","Category":"Museum","Description":"Cylindrical fortress and former papal refuge overlooking the Tiber, with historic rooms, military exhibits, ramparts, and rooftop city views.","Tags":["indoor","outdoor","historical","museum","panoramic-view","family-friendly"],"TotalPriceAllTripMembersUsd":37,"PricePerAdultUsd":17,"PricePerChildUsd":3,"MinimumAge":0,"AverageDurationHours":1.75,"City":"Rome","District":"Borgo","Latitude":41.9031,"Longitude":12.4663,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Thursday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Friday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Saturday","OpenTime":"09:00:00","CloseTime":"19:30:00"},{"DayOfWeek":"Sunday","OpenTime":"09:00:00","CloseTime":"19:30:00"}],"Rating":4.7,"ReviewCount":92100},{"AttractionId":"rome-attraction-015","AttractionName":"Orange Garden","Category":"Park","Description":"Peaceful hilltop garden on the Aventine, known for orange trees, shaded paths, romantic atmosphere, and a beautiful terrace view over Rome.","Tags":["outdoor","park","free","romantic","panoramic-view","quiet"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.75,"City":"Rome","District":"Aventino","Latitude":41.8856,"Longitude":12.4801,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Tuesday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Thursday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Friday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Saturday","OpenTime":"07:00:00","CloseTime":"21:00:00"},{"DayOfWeek":"Sunday","OpenTime":"07:00:00","CloseTime":"21:00:00"}],"Rating":4.7,"ReviewCount":18400},{"AttractionId":"rome-attraction-016","AttractionName":"Circus Maximus","Category":"Historical","Description":"Expansive ancient chariot-racing arena between the Aventine and Palatine hills, now a broad open archaeological park and event space.","Tags":["outdoor","historical","free","walking","family-friendly","archaeology"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1,"City":"Rome","District":"Ripa","Latitude":41.886,"Longitude":12.4857,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.4,"ReviewCount":47800},{"AttractionId":"rome-attraction-017","AttractionName":"Bocca della Verit\u00E0","Category":"Historical","Description":"Famous ancient marble mask at the portico of Santa Maria in Cosmedin, surrounded by legends about truth-telling and a classic Roman photo stop.","Tags":["outdoor","historical","photogenic","family-friendly","legendary","quick-stop"],"TotalPriceAllTripMembersUsd":4,"PricePerAdultUsd":2,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.5,"City":"Rome","District":"Ripa","Latitude":41.8882,"Longitude":12.4817,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Tuesday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Thursday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Friday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Saturday","OpenTime":"09:30:00","CloseTime":"17:50:00"},{"DayOfWeek":"Sunday","OpenTime":"09:30:00","CloseTime":"17:50:00"}],"Rating":4.4,"ReviewCount":23600},{"AttractionId":"rome-attraction-018","AttractionName":"National Roman Museum","Category":"Museum","Description":"Major archaeological museum collection spread across historic sites, featuring Roman sculptures, frescoes, mosaics, coins, and everyday ancient artifacts.","Tags":["indoor","museum","archaeology","historical","rainy-day","educational"],"TotalPriceAllTripMembersUsd":24,"PricePerAdultUsd":12,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":2,"City":"Rome","District":"Termini","Latitude":41.9022,"Longitude":12.4983,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"09:30:00","CloseTime":"19:00:00"}],"Rating":4.6,"ReviewCount":11200},{"AttractionId":"rome-attraction-019","AttractionName":"Baths of Diocletian","Category":"Museum","Description":"Impressive remains of ancient imperial baths, now part of the National Roman Museum, with cloisters, inscriptions, sculpture, and archaeological galleries.","Tags":["indoor","outdoor","museum","archaeology","historical","quiet"],"TotalPriceAllTripMembersUsd":24,"PricePerAdultUsd":12,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":1.5,"City":"Rome","District":"Termini","Latitude":41.9029,"Longitude":12.4989,"OpeningHours":[{"DayOfWeek":"Tuesday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Wednesday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Thursday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Friday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Saturday","OpenTime":"09:30:00","CloseTime":"19:00:00"},{"DayOfWeek":"Sunday","OpenTime":"09:30:00","CloseTime":"19:00:00"}],"Rating":4.6,"ReviewCount":6700},{"AttractionId":"rome-attraction-020","AttractionName":"Spanish Steps","Category":"Historical","Description":"Elegant monumental staircase connecting Piazza di Spagna with Trinit\u00E0 dei Monti, popular for people-watching, photography, and nearby luxury shopping.","Tags":["outdoor","free","romantic","photogenic","shopping-nearby","iconic"],"TotalPriceAllTripMembersUsd":0,"PricePerAdultUsd":0,"PricePerChildUsd":0,"MinimumAge":0,"AverageDurationHours":0.75,"City":"Rome","District":"Campo Marzio","Latitude":41.9059,"Longitude":12.4823,"OpeningHours":[{"DayOfWeek":"Monday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Tuesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Wednesday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Thursday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Friday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Saturday","OpenTime":"00:00:00","CloseTime":"23:59:00"},{"DayOfWeek":"Sunday","OpenTime":"00:00:00","CloseTime":"23:59:00"}],"Rating":4.6,"ReviewCount":84600}]}

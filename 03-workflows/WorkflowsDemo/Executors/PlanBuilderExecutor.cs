@@ -90,13 +90,20 @@ internal sealed partial class PlanBuilderExecutor(
                 AccommodationOption: accommodationOptions,
                 AttractionOptions: attractionsOptions,
                 RestaurantOptions: restaurantOptions));
-
-        agentSession ??= await agent.CreateSessionAsync(cancellationToken);
-        var result = (await agent.RunAsync<TripPlan>(
-            prompt,
-            agentSession,
-            cancellationToken: cancellationToken)).Result;
         
+        // File.WriteAllText("agent-prompts/plan-builder-initial-prompt.txt", prompt);
+
+        // agentSession ??= await agent.CreateSessionAsync(cancellationToken);
+        // var result = (await agent.RunAsync<TripPlan>(
+        //     prompt,
+        //     agentSession,
+        //     cancellationToken: cancellationToken)).Result;
+
+        var result = JsonSerializer.Deserialize<TripPlan>(
+            File.ReadAllText("agent-responses/plan-builder-initial-response.txt")
+        );
+        await Task.Delay(5000);
+
         result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
         // save plan in shared state
@@ -171,12 +178,19 @@ internal sealed partial class PlanBuilderExecutor(
 
             var prompt = GetReviewerFeedbackPrompt(feedback.Details);
 
-            agentSession ??= await agent.CreateSessionAsync(cancellationToken);
-            tripPlan = (await agent.RunAsync<TripPlan>(
-                prompt,
-                agentSession,
-                cancellationToken: cancellationToken)).Result;
-            
+            // File.WriteAllText("agent-prompts/plan-builder-after-agent-review-prompt.txt", prompt);
+
+            // agentSession ??= await agent.CreateSessionAsync(cancellationToken);
+            // tripPlan = (await agent.RunAsync<TripPlan>(
+            //     prompt,
+            //     agentSession,
+            //     cancellationToken: cancellationToken)).Result;
+
+            tripPlan = JsonSerializer.Deserialize<TripPlan>(
+                File.ReadAllText("agent-responses/plan-builder-after-agent-review-response.txt")
+            );
+            await Task.Delay(5000);
+
             tripPlan.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
             // save updated plan in shared state
@@ -270,11 +284,21 @@ internal sealed partial class PlanBuilderExecutor(
 
         logger.LogInformation("Received feedback from human reviewer, iterating on plan");
 
-        agentSession ??= await agent.CreateSessionAsync(cancellationToken);
-        var result = (await agent.RunAsync<TripPlan>(
-            GetHumanFeedbackPrompt(feedback.Details),
-            agentSession,
-            cancellationToken: cancellationToken)).Result;
+        var prompt = GetHumanFeedbackPrompt(feedback.Details);
+
+        File.WriteAllText("agent-prompts/plan-builder-after-human-review-prompt.txt", prompt);
+
+        // agentSession ??= await agent.CreateSessionAsync(cancellationToken);
+        // var result = (await agent.RunAsync<TripPlan>(
+        //     prompt,
+        //     agentSession,
+        //     cancellationToken: cancellationToken)).Result;
+        // await Task.Delay(5000);
+
+        var result = JsonSerializer.Deserialize<TripPlan>(
+            File.ReadAllText("agent-responses/plan-builder-after-human-review-response.txt")
+        );
+        await Task.Delay(5000);
         
         result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 

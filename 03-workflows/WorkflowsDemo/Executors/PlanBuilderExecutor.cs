@@ -18,6 +18,7 @@ internal sealed partial class PlanBuilderExecutor(
     ILogger<PlanBuilderExecutor> logger)
     : Executor(nameof(PlanBuilderExecutor))
 {
+    private AgentSession? agentSession;
     private int researchersCompletedCount = 0;
 
     protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder protocolBuilder)
@@ -89,14 +90,16 @@ internal sealed partial class PlanBuilderExecutor(
                 AttractionOptions: attractionsOptions,
                 RestaurantOptions: restaurantOptions));
 
-        var generatedPlan = (await agent.RunAsync<TripPlan>(
+        agentSession ??= await agent.CreateSessionAsync(cancellationToken);
+        var result = (await agent.RunAsync<TripPlan>(
             prompt,
+            agentSession,
             cancellationToken: cancellationToken)).Result;
 
         // save plan in shared state
         await context.QueueStateUpdateAsync(
             key: CurrentTripPlanStateKeyName,
-            value: generatedPlan,
+            value: result,
             scopeName: SharedStateScopeName,
             cancellationToken: cancellationToken
         );
@@ -121,7 +124,7 @@ internal sealed partial class PlanBuilderExecutor(
         await context.SendMessageAsync(new PlanBuilderResult(
             FinalPlanReady: false,
             PlanReadyForHumanReview: false,
-            TripPlan: generatedPlan), cancellationToken);
+            TripPlan: result), cancellationToken);
     }
 
     private async ValueTask HandlePlanReviewerFeedbackAsync(
@@ -165,8 +168,10 @@ internal sealed partial class PlanBuilderExecutor(
 
             var prompt = GetReviewerFeedbackPrompt(feedback.Details);
 
+            agentSession ??= await agent.CreateSessionAsync(cancellationToken);
             tripPlan = (await agent.RunAsync<TripPlan>(
                 prompt,
+                agentSession,
                 cancellationToken: cancellationToken)).Result;
 
             // save updated plan in shared state
@@ -242,12 +247,6 @@ internal sealed partial class PlanBuilderExecutor(
         if (!feedback.IsPlanApproved && string.IsNullOrWhiteSpace(feedback.Details))
             throw new InvalidOperationException("Received invalid value from human feedback");
 
-        var tripPlan = await context.ReadStateAsync<TripPlan>(
-            key: CurrentTripPlanStateKeyName,
-            scopeName: SharedStateScopeName,
-            cancellationToken: cancellationToken
-        ) ?? throw new InvalidOperationException("Trip plan instance is missing from shared state.");
-
         var currentHumanReviewRound = await context.ReadStateAsync<int>(
             key: HumanReviewRoundNumberStateKeyName,
             scopeName: SharedStateScopeName,
@@ -266,14 +265,16 @@ internal sealed partial class PlanBuilderExecutor(
 
         logger.LogInformation("Received feedback from human reviewer, iterating on plan");
 
-        tripPlan = (await agent.RunAsync<TripPlan>(
+        agentSession ??= await agent.CreateSessionAsync(cancellationToken);
+        var result = (await agent.RunAsync<TripPlan>(
             GetHumanFeedbackPrompt(feedback.Details),
+            agentSession,
             cancellationToken: cancellationToken)).Result;
 
         // save updated plan in shared state
         await context.QueueStateUpdateAsync(
             key: CurrentTripPlanStateKeyName,
-            value: tripPlan,
+            value: result,
             scopeName: SharedStateScopeName,
             cancellationToken: cancellationToken
         );
@@ -287,11 +288,12 @@ internal sealed partial class PlanBuilderExecutor(
         );
 
         logger.LogInformation("Sending updated plan to agent reviewer");
+        
         await context.SendMessageAsync(
             new PlanBuilderResult(
                 FinalPlanReady: false,
                 PlanReadyForHumanReview: false,
-                TripPlan: tripPlan),
+                TripPlan: result),
             cancellationToken);
     }
 

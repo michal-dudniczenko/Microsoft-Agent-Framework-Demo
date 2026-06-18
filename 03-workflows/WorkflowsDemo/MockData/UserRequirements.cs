@@ -7,7 +7,7 @@ internal static class UserRequirements
     public static InitialUserTripRequirements Data { get; } = new(
         Country: "Italy",
         City: "Rome",
-        TripBudgetUsd: 2500,
+        TripBudgetUsd: 1500,
         ArrivalDateTime: DateTime.Now,
         DepartureDateTime: DateTime.Now.AddDays(3),
         NumberOfAdults: 2,

@@ -1,5 +1,6 @@
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.Models;
@@ -12,7 +13,9 @@ using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class PlanBuilderExecutor(AIAgent agent)
+internal sealed partial class PlanBuilderExecutor(
+    AIAgent agent,
+    ILogger<PlanBuilderExecutor> logger)
     : Executor(nameof(PlanBuilderExecutor))
 {
     private int researchersCompletedCount = 0;
@@ -39,10 +42,12 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         researchersCompletedCount++;
         if (researchersCompletedCount < TotalResearchersCount)
         {
+            logger.LogInformation(
+                "Waiting for all researchers to complete. Remaining: {remaining}/{allResearhers}",
+                TotalResearchersCount - researchersCompletedCount, TotalResearchersCount
+            );
             return;
         }
-
-        Console.WriteLine("PlanBuilderExecutor runs, all researches completed, generating plan");
 
         var userRequirements = await context.ReadStateAsync<InitialUserTripRequirements>(
             key: InitialTripRequirementsStateKeyName,
@@ -111,6 +116,8 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
             cancellationToken: cancellationToken
         );
 
+        logger.LogInformation("Generated trip itinerary, passing it to the agent reviewer");
+
         await context.SendMessageAsync(new PlanBuilderResult(
             FinalPlanReady: false,
             PlanReadyForHumanReview: false,
@@ -144,13 +151,17 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         if (currentHumanReviewRound == default)
             throw new InvalidOperationException("Human review round number is missing from shared state");
 
-        Console.WriteLine("PlanBuilderExecutor runs, received PlanReviewerFeedback\n\t"
-            + $"agent review round {currentAgentReviewRound}/{MaxAgentReviewRounds}\n\t"
-            + $"human review round {currentHumanReviewRound - 1}/{MaxHumanReviewRounds}");
+        logger.LogInformation(
+            "Received feedback from agent reviewer. Agent review round {AgentReviewRound}/{MaxAgentReviewRounds}. "
+            + "Human review round {HumanReviewRound}/{MaxHumanReviewRounds}",
+            currentAgentReviewRound,
+            MaxAgentReviewRounds,
+            currentHumanReviewRound - 1,
+            MaxHumanReviewRounds);
 
         if (feedback.ChangesSuggested)
         {
-            Console.WriteLine("Reviewer suggested changes, iterating on plan");
+            logger.LogInformation("Reviewer suggested changes, iterating on plan");
 
             var prompt = GetReviewerFeedbackPrompt(feedback.Details);
 
@@ -168,7 +179,7 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
 
             if (currentAgentReviewRound < MaxAgentReviewRounds)
             {
-                Console.WriteLine("Sending updated plan for another review round");
+                logger.LogInformation("Sending updated plan for another review round");
 
                 // increase agent review round number
                 await context.QueueStateUpdateAsync(
@@ -186,6 +197,10 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
                 return;
             }
         }
+        else
+        {
+            logger.LogInformation("Reviewer approved plan");
+        }
 
         // reset round number
         await context.QueueStateUpdateAsync(
@@ -199,23 +214,23 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
 
         if (currentHumanReviewRound <= MaxHumanReviewRounds)
         {
-            Console.WriteLine("Sending plan for human review");
+            logger.LogInformation("Sending plan for human review");
 
             await context.SendMessageAsync(new PlanBuilderResult(
                 FinalPlanReady: false,
                 PlanReadyForHumanReview: true,
                 TripPlan: tripPlan), cancellationToken);
-            
+
             return;
         }
 
-        Console.WriteLine("Reached maximum number of human review rounds, sending plan to plan renderer");
+        logger.LogInformation("Reached maximum number of human review rounds, sending plan to the plan renderer");
 
         await context.SendMessageAsync(new PlanBuilderResult(
             FinalPlanReady: true,
             PlanReadyForHumanReview: false,
             TripPlan: tripPlan), cancellationToken);
-        
+
         return;
     }
 
@@ -243,13 +258,13 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
 
         if (feedback.IsPlanApproved)
         {
-            Console.WriteLine("Human approved plan");
+            logger.LogInformation("Human approved plan");
 
             await context.YieldOutputAsync(new WorkflowCompletedSignal(), cancellationToken);
             return;
         }
 
-        Console.WriteLine("Received feedback from human reviewer, iterating on plan...");
+        logger.LogInformation("Received feedback from human reviewer, iterating on plan");
 
         tripPlan = (await agent.RunAsync<TripPlan>(
             GetHumanFeedbackPrompt(feedback.Details),
@@ -271,7 +286,7 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
             cancellationToken: cancellationToken
         );
 
-        Console.WriteLine("Sending updated plan to agent reviewer");
+        logger.LogInformation("Sending updated plan to agent reviewer");
         await context.SendMessageAsync(
             new PlanBuilderResult(
                 FinalPlanReady: false,
@@ -283,19 +298,19 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
     private static string GetReviewerFeedbackPrompt(string feedback) => $"""
         The Reviewer Agent has evaluated your previously generated trip plan and suggested the following corrections:
 
-        ${feedback}
+        {feedback}
 
         Regenerate the trip plan, strictly observing these execution rules during your revision:
 
         1. Fix the issues noted above by re-evaluating the original candidate data arrays (Accommodations, Attractions, Restaurants). Do not invent or enrich any data.
         2. Maintain absolute compliance with all original rules: strict trip boundaries, chronological sorting, standard meal windows, and age/reservation warnings.
         3. Your output must be exactly one valid JSON object matching the required PascalCase schema. Do not include markdown formatting, code fences (such as ```json), or any conversational text before or after the JSON.
-    """;
+    """.Replace("    ", string.Empty);
 
     private static string GetHumanFeedbackPrompt(string feedback) => $"""
         The human reviewer has evaluated your previously generated trip plan and issued the following mandatory corrections:
 
-        ${feedback}
+        {feedback}
 
         Regenerate the trip plan, strictly observing these execution rules during your revision:
 
@@ -303,5 +318,5 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         2. Maintain absolute compliance with all original rules: strict trip boundaries, chronological sorting, standard meal windows, and age/reservation warnings.
         3. Your output must be exactly one valid JSON object matching the required PascalCase schema. Do not include markdown formatting, code fences (such as ```json), or any conversational text before or after the JSON.
         4. If the suggested fix is impossible to apply, add a note and explanation to the `OverallExplanation` field content.
-    """;
+    """.Replace("    ", string.Empty);
 }

@@ -1,5 +1,6 @@
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
@@ -9,7 +10,9 @@ using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class AttractionsResearcherExecutor(AIAgent agent)
+internal sealed partial class AttractionsResearcherExecutor(
+    AIAgent agent,
+    ILogger<AttractionsResearcherExecutor> logger)
     : Executor<RequirementsProcessedSignal, ResearchCompletedSignal>(nameof(AttractionsResearcherExecutor))
 {
     public override async ValueTask<ResearchCompletedSignal> HandleAsync(
@@ -17,8 +20,6 @@ internal sealed partial class AttractionsResearcherExecutor(AIAgent agent)
         IWorkflowContext context,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("AttractionsResearcherExecutor runs, saves attractions options to state");
-
         var fullRequirements = await context.ReadStateAsync<ProcessedTripRequirements>(
             key: ProcessedTripRequirementsStateKeyName,
             scopeName: SharedStateScopeName,
@@ -79,6 +80,8 @@ internal sealed partial class AttractionsResearcherExecutor(AIAgent agent)
                 MatchExplanation: o.RankReasoning
             );
         }).ToList();
+
+        logger.LogInformation("Produced a list of best attractions options");
 
         await context.QueueStateUpdateAsync(
             key: AttractionsOptionsStateKeyName,

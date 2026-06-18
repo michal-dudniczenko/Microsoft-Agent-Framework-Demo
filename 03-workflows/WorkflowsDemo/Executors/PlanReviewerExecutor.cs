@@ -1,5 +1,6 @@
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.PlanBuilder;
@@ -8,7 +9,9 @@ using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class PlanReviewerExecutor(AIAgent agent)
+internal sealed partial class PlanReviewerExecutor(
+    AIAgent agent,
+    ILogger<PlanReviewerExecutor> logger)
     : Executor<PlanBuilderResult, PlanReviewerFeedback>(nameof(PlanReviewerExecutor))
 {
     public override async ValueTask<PlanReviewerFeedback> HandleAsync(
@@ -16,8 +19,6 @@ internal sealed partial class PlanReviewerExecutor(AIAgent agent)
         IWorkflowContext context,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("ReviewerExecutor runs, sends feedback back to plan builder");
-
         var requirements = await context.ReadStateAsync<InitialUserTripRequirements>(
             key: InitialTripRequirementsStateKeyName,
             scopeName: SharedStateScopeName,
@@ -30,6 +31,8 @@ internal sealed partial class PlanReviewerExecutor(AIAgent agent)
         var result = (await agent.RunAsync<PlanReviewerFeedback>(
             prompt,
             cancellationToken: cancellationToken)).Result;
+
+        logger.LogInformation("Reviewed itinerary, sending feedback back to the plan builder");
 
         return result;
     }

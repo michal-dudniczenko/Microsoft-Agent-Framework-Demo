@@ -1,4 +1,5 @@
 using Microsoft.Agents.AI.Workflows;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Net;
 using System.Text;
@@ -7,7 +8,7 @@ using WorkflowsDemo.Models.PlanBuilder;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class PlanRendererExecutor()
+internal sealed partial class PlanRendererExecutor(ILogger<PlanRendererExecutor> logger)
     : Executor(nameof(PlanRendererExecutor))
 {
     private static int TripPlanIteration = 1;
@@ -35,8 +36,6 @@ internal sealed partial class PlanRendererExecutor()
         IWorkflowContext context,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("PlanRendererExecutor runs, renders trip plan in the html format");
-
         ArgumentNullException.ThrowIfNull(result);
         ArgumentNullException.ThrowIfNull(result.TripPlan);
 
@@ -67,7 +66,7 @@ internal sealed partial class PlanRendererExecutor()
             }
         }
 
-        Console.WriteLine($"Trip plan generated: {Path.GetFullPath(outputPath)}");
+        logger.LogInformation("Rendered visual trip itinerary");
 
         if (result.FinalPlanReady)
         {

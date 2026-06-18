@@ -1,5 +1,6 @@
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Workflows;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
@@ -9,7 +10,9 @@ using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
 
-internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
+internal sealed partial class RestaurantsResearcherExecutor(
+    AIAgent agent,
+    ILogger<RestaurantsResearcherExecutor> logger)
     : Executor<RequirementsProcessedSignal, ResearchCompletedSignal>(nameof(RestaurantsResearcherExecutor))
 {
     public override async ValueTask<ResearchCompletedSignal> HandleAsync(
@@ -17,8 +20,6 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
         IWorkflowContext context,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("RestaurantsResearcherExecutor runs, saves restaurants options to state");
-
         var fullRequirements = await context.ReadStateAsync<ProcessedTripRequirements>(
             key: ProcessedTripRequirementsStateKeyName,
             scopeName: SharedStateScopeName,
@@ -42,9 +43,9 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
             fullRequirements.TripBudgetUsd);
 
         var prompt = JsonSerializer.Serialize(
-            new RestaurantResearcherPrompt(relevantRequirements, allRestaurantsOptions));
+            new RestaurantsResearcherPrompt(relevantRequirements, allRestaurantsOptions));
 
-        var result = (await agent.RunAsync<List<RestaurantRankingItem>>(
+        var result = (await agent.RunAsync<List<RestaurantsRankingItem>>(
             prompt,
             cancellationToken: cancellationToken)).Result;
 
@@ -81,6 +82,8 @@ internal sealed partial class RestaurantsResearcherExecutor(AIAgent agent)
                 o.RankReasoning
             );
         }).ToList();
+
+        logger.LogInformation("Produced a list of best restaurants options");
 
         await context.QueueStateUpdateAsync(
             key: RestaurantsOptionsStateKeyName,

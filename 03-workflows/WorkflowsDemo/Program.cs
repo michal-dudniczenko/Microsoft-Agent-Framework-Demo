@@ -53,7 +53,7 @@ var attractionsResearcherAgent = AttractionsResearcherAgent.GetAgent(ollamaChatC
 var accommodationResearcherAgent = AccommodationResearcherAgent.GetAgent(ollamaChatClient);
 var restaurantsResearcherAgent = RestaurantsResearcherAgent.GetAgent(ollamaChatClient);
 
-var planBuilderAgent = PlanBuilderAgent.GetAgent(openRouterChatClient);
+var planBuilderAgent = PlanBuilderAgent.GetAgent(ollamaChatClient);
 var planReviewerAgent = PlanReviewerAgent.GetAgent(ollamaChatClient);
 
 // executors

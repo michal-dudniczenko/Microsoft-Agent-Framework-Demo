@@ -38,6 +38,7 @@ internal static class PlanReviewerAgent
         - Cross-reference `TotalEstimatedCostUsd` and `Accommodation.TotalStayPriceUsd` against the user's `TripBudgetUsd` and the plan summary `BudgetUsd`.
         - Verify that `RemainingBudgetUsd` is calculated accurately and is not negative.
         - Assess whether the estimated costs for individual scheduled items (restaurants, attractions) are realistic for the destination and selected `TripStyle`.
+        - Treat transportation costs as out of scope. Do not require, estimate, or critique monetary transportation costs; only flag Transport items if their timing, duration, or placement is logistically flawed.
 
         2. Temporal & Schedule Logistics
         - Check chronological integrity: Ensure `StartTime` and `EndTime` of sequential items never overlap.
@@ -69,7 +70,7 @@ internal static class PlanReviewerAgent
         ```
 
         ### Execution Rules
-        - If you find even ONE realistic issue (overlapping times, missing transport, budget overage, inappropriate pacing for kids), set `ChangesSuggested` to true.
+        - If you find even ONE realistic issue (overlapping times, missing transport time, budget overage excluding transportation costs, inappropriate pacing for kids), set `ChangesSuggested` to true.
         - Be specific in your `Details`. Cite specific days, item titles, or cost fields that need adjustment so the generating agent can easily act on your feedback.
     """;
 }

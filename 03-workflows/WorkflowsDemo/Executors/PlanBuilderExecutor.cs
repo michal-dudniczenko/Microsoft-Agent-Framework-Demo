@@ -24,7 +24,7 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         protocolBuilder.ConfigureRoutes(routeBuilder =>
         {
             routeBuilder.AddHandler<ResearchCompletedSignal>(HandleResearchCompletedAsync);
-            routeBuilder.AddHandler<PlanReviewerFeedback, PlanBuilderResult>(HandlePlanReviewerFeedbackAsync);
+            routeBuilder.AddHandler<PlanReviewerFeedback>(HandlePlanReviewerFeedbackAsync);
             routeBuilder.AddHandler<HumanReviewFeedback>(HandleHumanFeedbackAsync);
         });
 
@@ -117,7 +117,7 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
             TripPlan: generatedPlan), cancellationToken);
     }
 
-    private async ValueTask<PlanBuilderResult> HandlePlanReviewerFeedbackAsync(
+    private async ValueTask HandlePlanReviewerFeedbackAsync(
         PlanReviewerFeedback feedback,
         IWorkflowContext context,
         CancellationToken cancellationToken = default)
@@ -152,8 +152,10 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         {
             Console.WriteLine("Reviewer suggested changes, iterating on plan");
 
+            var prompt = GetReviewerFeedbackPrompt(feedback.Details);
+
             tripPlan = (await agent.RunAsync<TripPlan>(
-                GetReviewerFeedbackPrompt(feedback.Details),
+                prompt,
                 cancellationToken: cancellationToken)).Result;
 
             // save updated plan in shared state
@@ -176,10 +178,12 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
                     cancellationToken: cancellationToken
                 );
 
-                return new PlanBuilderResult(
+                await context.SendMessageAsync(new PlanBuilderResult(
                     FinalPlanReady: false,
                     PlanReadyForHumanReview: false,
-                    TripPlan: tripPlan);
+                    TripPlan: tripPlan), cancellationToken);
+
+                return;
             }
         }
 
@@ -197,18 +201,22 @@ internal sealed partial class PlanBuilderExecutor(AIAgent agent)
         {
             Console.WriteLine("Sending plan for human review");
 
-            return new PlanBuilderResult(
+            await context.SendMessageAsync(new PlanBuilderResult(
                 FinalPlanReady: false,
                 PlanReadyForHumanReview: true,
-                TripPlan: tripPlan);
+                TripPlan: tripPlan), cancellationToken);
+            
+            return;
         }
 
         Console.WriteLine("Reached maximum number of human review rounds, sending plan to plan renderer");
 
-        return new PlanBuilderResult(
+        await context.SendMessageAsync(new PlanBuilderResult(
             FinalPlanReady: true,
             PlanReadyForHumanReview: false,
-            TripPlan: tripPlan);
+            TripPlan: tripPlan), cancellationToken);
+        
+        return;
     }
 
     private async ValueTask HandleHumanFeedbackAsync(

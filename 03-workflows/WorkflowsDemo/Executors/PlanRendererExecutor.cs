@@ -10,6 +10,8 @@ namespace WorkflowsDemo.Executors;
 internal sealed partial class PlanRendererExecutor()
     : Executor(nameof(PlanRendererExecutor))
 {
+    private static int TripPlanIteration = 1;
+
     protected override ProtocolBuilder ConfigureProtocol(ProtocolBuilder protocolBuilder)
     {
         protocolBuilder.SendsMessage<PlanBuilderResult>();
@@ -23,7 +25,9 @@ internal sealed partial class PlanRendererExecutor()
         return protocolBuilder;
     }
 
-    private const string OutputFileName = "trip-plan.html";
+    private const string OutputFileNameBase = "trip-plan";
+    private const string TripPlansDirectoryName = "trip-plans";
+
     private static readonly CultureInfo DisplayCulture = CultureInfo.GetCultureInfo("en-US");
 
     private async ValueTask HandleAsync(
@@ -36,10 +40,13 @@ internal sealed partial class PlanRendererExecutor()
         ArgumentNullException.ThrowIfNull(result);
         ArgumentNullException.ThrowIfNull(result.TripPlan);
 
-        var outputPath = Path.Combine(Directory.GetCurrentDirectory(), OutputFileName);
+        var outputFileName = $"{OutputFileNameBase}-v{TripPlanIteration}.html";
+        TripPlanIteration++;
+
+        var outputPath = Path.Combine(Directory.GetCurrentDirectory(), TripPlansDirectoryName, outputFileName);
         var temporaryPath = Path.Combine(
             Directory.GetCurrentDirectory(),
-            $".{OutputFileName}.{Guid.NewGuid():N}.tmp");
+            $".{OutputFileNameBase}.{Guid.NewGuid():N}.tmp");
 
         try
         {

@@ -130,7 +130,7 @@ internal static class PlanBuilderAgent
 
         **5. Durations.** Use AverageDurationHours for attractions and AverageMealDurationHours for restaurants. Choose realistic durations for all other item types.
 
-        **6. Budget.** TotalEstimatedCostUsd = accommodation total + attraction costs + restaurant costs. Do not add costs for Transport/Break/FreeTime/Arrival/Departure unless the input explicitly provides them. Do not double-count accommodation cost inside scheduled items. Target ≤ BudgetUsd. If exceeded, return the best available plan, set RemainingBudgetUsd negative, and add a warning.
+        **6. Budget.** TotalEstimatedCostUsd = accommodation total + attraction costs + restaurant costs. Transportation costs are out of scope: always set Transport item EstimatedCostUsd to 0 and never include transportation costs in TotalEstimatedCostUsd or RemainingBudgetUsd. Do not add costs for Break/FreeTime/Arrival/Departure. Do not double-count accommodation cost inside scheduled items. Target ≤ BudgetUsd. If exceeded, return the best available plan, set RemainingBudgetUsd negative, and add a warning.
 
         **7. Demographics.** If NumberOfChildren > 0, prefer attractions with MinimumAge = 0. Warn when scheduling any attraction with MinimumAge > 0 for a group that includes children.
 

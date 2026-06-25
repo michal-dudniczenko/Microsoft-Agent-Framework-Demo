@@ -1,13 +1,20 @@
-using Microsoft.Extensions.AI;
+using LessSimpleCliChatDemo;
 using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.DevUI;
+using Microsoft.Agents.AI.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
-using System.ClientModel;
 using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using LessSimpleCliChatDemo;
+using System.ClientModel;
 using System.Text.Json;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
@@ -58,11 +65,13 @@ IChatClient chatClient =
         configure: c => c.EnableSensitiveData = true)
     .Build();
 
+const string AgentName = "MyAgent";
+
 AIAgent agent = new ChatClientAgent(
     chatClient: chatClient,
     options: new ChatClientAgentOptions()
     {
-        Name = "MyAgent",
+        Name = AgentName,
         ChatHistoryProvider = new InMemoryChatHistoryProvider(),
         AIContextProviders = [],
         ChatOptions = new ChatOptions()
@@ -117,6 +126,42 @@ Console.CancelKeyPress += (sender, e) =>
     SaveSessionAsync(agent, session, sessionFilePath).GetAwaiter().GetResult();
     Environment.Exit(0);
 };
+
+#endregion
+
+#region DevUI Setup
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.SetMinimumLevel(LogLevel.Warning);
+
+builder.Services.AddOpenAIResponses();
+builder.Services.AddOpenAIConversations();
+builder.Services.AddDevUI();
+
+builder.AddAIAgent(AgentName, (_, _) => agent);
+
+var app = builder.Build();
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    var addresses = app.Services
+        .GetRequiredService<IServer>()
+        .Features
+        .Get<IServerAddressesFeature>()
+        ?.Addresses;
+
+    var address = addresses?.FirstOrDefault();
+
+    Console.WriteLine("\n=================================================================\n");
+    Console.WriteLine($"DevUI running at: {address}/devui");
+});
+
+app.MapOpenAIResponses();
+app.MapOpenAIConversations();
+app.MapDevUI();
+
+_ = app.RunAsync();
 
 #endregion
 

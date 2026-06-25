@@ -46,6 +46,8 @@ internal sealed partial class PlanRendererExecutor(ILogger<PlanRendererExecutor>
         var temporaryPath = Path.Combine(
             Directory.GetCurrentDirectory(),
             $".{OutputFileNameBase}.{Guid.NewGuid():N}.tmp");
+        
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         try
         {

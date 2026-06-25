@@ -9,6 +9,7 @@ using WorkflowsDemo.Models.AttractionsResearch;
 using WorkflowsDemo.Models.PlanBuilder;
 using WorkflowsDemo.Models.PlanReviewer;
 using WorkflowsDemo.Models.RestaurantsResearch;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -95,6 +96,8 @@ internal sealed partial class PlanBuilderExecutor(
             prompt,
             agentSession,
             cancellationToken: cancellationToken)).Result;
+        
+        result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
         // save plan in shared state
         await context.QueueStateUpdateAsync(
@@ -173,6 +176,8 @@ internal sealed partial class PlanBuilderExecutor(
                 prompt,
                 agentSession,
                 cancellationToken: cancellationToken)).Result;
+            
+            tripPlan.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
             // save updated plan in shared state
             await context.QueueStateUpdateAsync(
@@ -270,6 +275,8 @@ internal sealed partial class PlanBuilderExecutor(
             GetHumanFeedbackPrompt(feedback.Details),
             agentSession,
             cancellationToken: cancellationToken)).Result;
+        
+        result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
         // save updated plan in shared state
         await context.QueueStateUpdateAsync(
@@ -288,7 +295,7 @@ internal sealed partial class PlanBuilderExecutor(
         );
 
         logger.LogInformation("Sending updated plan to agent reviewer");
-        
+
         await context.SendMessageAsync(
             new PlanBuilderResult(
                 FinalPlanReady: false,

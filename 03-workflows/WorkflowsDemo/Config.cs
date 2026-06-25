@@ -6,13 +6,12 @@ internal static class Config
     public const string OpenTelemetryServiceName = "WorkflowsDemo";
     public const string OpenTelemetryEndpoint = "http://localhost:4317";
 
+    public const string AnthropicApiKeyEnvVariableName = "AnthropicApiKey";
+    public const string ClaudeSonnetModelName = "claude-sonnet-4-6";
+    public const string ClaudeHaikuModelName = "claude-haiku-4-5";
+
     public const string OllamaModelName = "<OLLAMA-MODEL-NAME>";
     public const string OllamaOpenAIUrl = "<OLLAMA-URL>";
-
-    public const string OpenRouterModelName = "<OPEN-ROUTER-MODEL-NAME>";
-    public const string OpenRouterApiKey = "<OPEN-ROUTER-API-KEY>";
-    public const string OpenRouterApiKeyEnvVarName = "OPEN_ROUTER_API_KEY";
-    public const string OpenRouterOpenAIUrl = "https://openrouter.ai/api/v1";
 
     public const int TotalResearchersCount = 3;
 

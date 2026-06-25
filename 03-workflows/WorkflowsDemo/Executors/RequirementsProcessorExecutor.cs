@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.Models;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -41,13 +42,15 @@ internal sealed partial class RequirementsProcessorExecutor(
 
         var result = (await agent.RunAsync<ProcessedTripRequirements>(prompt, cancellationToken: cancellationToken))
             .Result;
+        
+        result.SaveModelResponse(fileName: agent.Id);
 
         logger.LogInformation("Processed initial requirements and assessed trip feasibility");
 
         if (!result.IsTripPossible)
         {
             await context.YieldOutputAsync(new TripNotPossibleSignal(
-                result.TripNotPossibleExplanation), 
+                result.TripNotPossibleExplanation),
                 cancellationToken);
 
             return;

@@ -1,23 +1,24 @@
+using Anthropic;
+using Anthropic.Models.Messages;
 using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
+using WorkflowsDemo.Utils;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Agents;
 
 internal static class PlanBuilderAgent
 {
-    public static AIAgent GetAgent(IChatClient chatClient)
+    private const string AgentName = "plan-builder";
+
+    public static AIAgent GetAgent(IAnthropicClient client)
     {
-        return new ChatClientAgent(
-            chatClient,
-            options: new ChatClientAgentOptions()
-            {
-                Id = "plan-builder",
-                ChatOptions = new ChatOptions()
-                {
-                    Instructions = SystemPrompt,
-                    Tools = []
-                }
-            });
+        return client.AsClaudeSonnetAgent(
+            modelName: ClaudeSonnetModelName,
+            thinkingEnabled: false,
+            effort: Effort.Low,
+            agentId: AgentName,
+            systemPrompt: SystemPrompt
+        );
     }
 
     private const string SystemPrompt = """

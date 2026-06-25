@@ -5,17 +5,18 @@ namespace WorkflowsDemo.Agents;
 
 internal static class RequirementsProcessorAgent
 {
+    private const string AgentName = "requirements-processor";
+
     public static AIAgent GetAgent(IChatClient chatClient)
     {
         return new ChatClientAgent(
-            chatClient,
+            chatClient: chatClient,
             options: new ChatClientAgentOptions()
             {
-                Id = "requirements-processor",
+                Id = AgentName,
                 ChatOptions = new ChatOptions()
                 {
-                    Instructions = SystemPrompt,
-                    Tools = []
+                    Instructions = SystemPrompt
                 }
             });
     }

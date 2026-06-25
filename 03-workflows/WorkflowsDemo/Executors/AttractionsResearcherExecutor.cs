@@ -6,6 +6,7 @@ using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.AttractionsResearch;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -48,6 +49,8 @@ internal sealed partial class AttractionsResearcherExecutor(
         var result = (await agent.RunAsync<List<AttractionsRankingItem>>(
             prompt,
             cancellationToken: cancellationToken)).Result;
+        
+        result.SaveModelResponse(fileName: agent.Id);
 
         var attractionOptionsById = allAttractionsOptions.ToDictionary(
             a => a.AttractionId,

@@ -6,6 +6,7 @@ using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.AccommodationResearch;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -48,6 +49,8 @@ internal sealed partial class AccommodationResearcherExecutor(
         var result = (await agent.RunAsync<List<AccommodationRankingItem>>(
             prompt,
             cancellationToken: cancellationToken)).Result;
+        
+        result.SaveModelResponse(fileName: agent.Id);
 
         var accommodationOptionsById = allAccommodationOptions.ToDictionary(
             a => a.AccommodationId,

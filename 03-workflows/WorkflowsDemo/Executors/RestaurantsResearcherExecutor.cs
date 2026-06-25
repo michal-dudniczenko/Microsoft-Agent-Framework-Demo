@@ -6,6 +6,7 @@ using WorkflowsDemo.Events;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.RestaurantsResearch;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -48,8 +49,8 @@ internal sealed partial class RestaurantsResearcherExecutor(
         var result = (await agent.RunAsync<List<RestaurantsRankingItem>>(
             prompt,
             cancellationToken: cancellationToken)).Result;
-
-        cancellationToken.ThrowIfCancellationRequested();
+        
+        result.SaveModelResponse(fileName: agent.Id);
 
         var restaurantOptionsById = allRestaurantsOptions.ToDictionary(
             r => r.RestaurantId,

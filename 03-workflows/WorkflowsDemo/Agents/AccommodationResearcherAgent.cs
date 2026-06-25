@@ -1,23 +1,22 @@
+using Anthropic;
 using Microsoft.Agents.AI;
-using Microsoft.Extensions.AI;
+using WorkflowsDemo.Utils;
+using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Agents;
 
 internal static class AccommodationResearcherAgent
 {
-    public static AIAgent GetAgent(IChatClient chatClient)
+    private const string AgentName = "accommodation-researcher";
+
+    public static AIAgent GetAgent(IAnthropicClient client)
     {
-        return new ChatClientAgent(
-            chatClient,
-            options: new ChatClientAgentOptions()
-            {
-                Id = "accommodation-researcher",
-                ChatOptions = new ChatOptions()
-                {
-                    Instructions = SystemPrompt,
-                    Tools = []
-                }
-            });
+        return client.AsClaudeHaikuAgent(
+            modelName: ClaudeHaikuModelName,
+            thinkingEnabled: false,
+            agentId: AgentName,
+            systemPrompt: SystemPrompt
+        );
     }
 
     private const string SystemPrompt = """

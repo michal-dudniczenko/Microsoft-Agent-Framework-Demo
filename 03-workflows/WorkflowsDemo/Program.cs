@@ -1,11 +1,7 @@
-﻿using Microsoft.Agents.AI.DevUI;
-using Microsoft.Agents.AI.Hosting;
+﻿using Anthropic;
 using Microsoft.Agents.AI.Workflows;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -13,13 +9,13 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System.Diagnostics;
-using WorkflowsDemo;
 using WorkflowsDemo.Agents;
 using WorkflowsDemo.Events;
 using WorkflowsDemo.Executors;
 using WorkflowsDemo.MockData;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.PlanBuilder;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 #region  OpenTelemetry Setup
@@ -59,19 +55,27 @@ using var meterProvider = Sdk.CreateMeterProviderBuilder()
 
 #endregion
 
+IConfiguration configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
+
 // chat clients
-var openRouterChatClient = ChatClients.GetOpenRouterChatClient();
-var ollamaChatClient = ChatClients.GetOllamaChatClient();
+var anthropicClient = new AnthropicClient()
+{
+    ApiKey = configuration[AnthropicApiKeyEnvVariableName]
+};
+
+var ollamaChatClient = OllamaChatClientFactory.Create();
 
 // agents
 var requirementsProcessorAgent = RequirementsProcessorAgent.GetAgent(ollamaChatClient);
 
-var attractionsResearcherAgent = AttractionsResearcherAgent.GetAgent(ollamaChatClient);
-var accommodationResearcherAgent = AccommodationResearcherAgent.GetAgent(ollamaChatClient);
-var restaurantsResearcherAgent = RestaurantsResearcherAgent.GetAgent(ollamaChatClient);
+var attractionsResearcherAgent = AttractionsResearcherAgent.GetAgent(anthropicClient);
+var accommodationResearcherAgent = AccommodationResearcherAgent.GetAgent(anthropicClient);
+var restaurantsResearcherAgent = RestaurantsResearcherAgent.GetAgent(anthropicClient);
 
-var planBuilderAgent = PlanBuilderAgent.GetAgent(ollamaChatClient);
-var planReviewerAgent = PlanReviewerAgent.GetAgent(ollamaChatClient);
+var planBuilderAgent = PlanBuilderAgent.GetAgent(anthropicClient);
+var planReviewerAgent = PlanReviewerAgent.GetAgent(anthropicClient);
 
 // executors
 var requirementsProcessorExecutor = new RequirementsProcessorExecutor(
@@ -128,7 +132,7 @@ var workflow = new WorkflowBuilder(start: requirementsProcessorExecutor)
         planBuilderExecutor,
         planReviewerExecutor,
         condition: result => result?.PlanReadyForHumanReview == false && result?.FinalPlanReady == false)
-    
+
     .AddEdge(planReviewerExecutor, planBuilderExecutor)
 
     .AddEdge<PlanBuilderResult>(
@@ -168,11 +172,11 @@ await foreach (WorkflowEvent workflowEvent in run.WatchStreamAsync())
         case WorkflowOutputEvent evt:
             if (evt.Data is TripNotPossibleSignal signal)
             {
-                ConsoleWriteLineInColor(
+                ColoredConsole.WriteLine(
                     "\nUnfortunately i am not able to come up with a plan that would satisfy your requirements."
                     + "\nExplanation: " + signal.Explanation + "\n",
                     ConsoleColor.Red);
-                
+
                 workflowLogger.LogInformation("Assessed user requirements as not feasible");
             }
 
@@ -200,7 +204,7 @@ await foreach (WorkflowEvent workflowEvent in run.WatchStreamAsync())
 
             Console.WriteLine("\n=================================================================\n");
 
-            ConsoleWriteInColor(
+            ColoredConsole.Write(
                 "Please review generated plan. Answer 'y' to approve or suggest changes: ",
                 ConsoleColor.Cyan
             );
@@ -228,54 +232,4 @@ await foreach (WorkflowEvent workflowEvent in run.WatchStreamAsync())
             }
             break;
     }
-}
-
-#region DevUI Setup
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Logging.SetMinimumLevel(LogLevel.Warning);
-
-builder.Services.AddOpenAIResponses();
-builder.Services.AddOpenAIConversations();
-builder.Services.AddDevUI();
-
-builder.AddWorkflow(DemoWorkflowName, (_, _) => workflow);
-
-var app = builder.Build();
-
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    var addresses = app.Services
-        .GetRequiredService<IServer>()
-        .Features
-        .Get<IServerAddressesFeature>()
-        ?.Addresses;
-
-    var address = addresses?.FirstOrDefault();
-
-    Console.WriteLine("\n=================================================================\n");
-    Console.WriteLine($"DevUI running at: {address}/devui");
-});
-
-app.MapOpenAIResponses();
-app.MapOpenAIConversations();
-app.MapDevUI();
-
-await app.RunAsync();
-
-#endregion
-
-static void ConsoleWriteLineInColor(string value, ConsoleColor color)
-{
-    Console.ForegroundColor = color;
-    Console.WriteLine(value);
-    Console.ResetColor();
-}
-
-static void ConsoleWriteInColor(string value, ConsoleColor color)
-{
-    Console.ForegroundColor = color;
-    Console.Write(value);
-    Console.ResetColor();
 }

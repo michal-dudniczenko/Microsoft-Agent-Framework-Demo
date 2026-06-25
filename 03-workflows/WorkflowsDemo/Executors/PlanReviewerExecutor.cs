@@ -5,6 +5,7 @@ using System.Text.Json;
 using WorkflowsDemo.Models;
 using WorkflowsDemo.Models.PlanBuilder;
 using WorkflowsDemo.Models.PlanReviewer;
+using WorkflowsDemo.Utils;
 using static WorkflowsDemo.Config;
 
 namespace WorkflowsDemo.Executors;
@@ -31,6 +32,8 @@ internal sealed partial class PlanReviewerExecutor(
         var result = (await agent.RunAsync<PlanReviewerFeedback>(
             prompt,
             cancellationToken: cancellationToken)).Result;
+        
+        result.SaveModelResponse(fileName: agent.Id, insertSeparator: true);
 
         logger.LogInformation("Reviewed itinerary, sending feedback back to the plan builder");
 

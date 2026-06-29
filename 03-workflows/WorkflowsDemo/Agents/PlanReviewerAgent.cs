@@ -13,7 +13,6 @@ internal static class PlanReviewerAgent
     public static AIAgent GetAgent(IAnthropicClient client)
     {
         return client.AsClaudeSonnetAgent(
-            modelName: ClaudeSonnetModelName,
             thinkingEnabled: false,
             effort: Effort.Low,
             agentId: AgentName,

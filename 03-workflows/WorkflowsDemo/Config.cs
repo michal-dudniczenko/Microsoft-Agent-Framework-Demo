@@ -16,7 +16,7 @@ internal static class Config
     public const int TotalResearchersCount = 3;
 
     public const int MaxAgentReviewRounds = 1;
-    public const int MaxHumanReviewRounds = 1;
+    public const int MaxHumanReviewRounds = 2;
 
     public const string SharedStateScopeName = "SharedScope";
 

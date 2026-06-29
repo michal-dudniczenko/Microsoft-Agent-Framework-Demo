@@ -10,7 +10,6 @@ internal static class AnthropicClientExtensions
 {
     public static AIAgent AsClaudeSonnetAgent(
         this IAnthropicClient client,
-        string modelName,
         bool thinkingEnabled,
         Effort effort,
         string agentId,
@@ -28,7 +27,7 @@ internal static class AnthropicClientExtensions
                     Tools = tools,
                     RawRepresentationFactory = (_) => new MessageCreateParams()
                     {
-                        Model = modelName,
+                        Model = ClaudeSonnetModelName,
                         MaxTokens = maxOutputTokens,
                         Messages = [],
                         Thinking = thinkingEnabled
@@ -52,7 +51,6 @@ internal static class AnthropicClientExtensions
 
     public static AIAgent AsClaudeHaikuAgent(
         this IAnthropicClient client,
-        string modelName,
         bool thinkingEnabled,
         string agentId,
         string? systemPrompt = null,
@@ -69,7 +67,7 @@ internal static class AnthropicClientExtensions
                     Tools = tools,
                     RawRepresentationFactory = (_) => new MessageCreateParams()
                     {
-                        Model = modelName,
+                        Model = ClaudeHaikuModelName,
                         MaxTokens = maxOutputTokens,
                         Messages = [],
                         Thinking = thinkingEnabled

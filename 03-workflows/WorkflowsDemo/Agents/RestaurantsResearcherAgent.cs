@@ -12,7 +12,6 @@ internal static class RestaurantsResearcherAgent
     public static AIAgent GetAgent(IAnthropicClient client)
     {
         return client.AsClaudeHaikuAgent(
-            modelName: ClaudeHaikuModelName,
             thinkingEnabled: false,
             agentId: AgentName,
             systemPrompt: SystemPrompt
